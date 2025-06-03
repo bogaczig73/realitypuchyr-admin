@@ -3,9 +3,9 @@ import React from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 
-const Client = dynamic(()=>import('../components/client'),{ssr:false})
+const Client = dynamic(()=>import('@/components/client'),{ssr:false})
 
-import Wrapper from "../components/wrapper";
+import Wrapper from "@/components/wrapper";
 
 export default function ReviewData(){
     return(

@@ -1,6 +1,14 @@
 import { NextIntlClientProvider } from 'next-intl';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import { League_Spartan } from 'next/font/google';
+
+const league_Spartan = League_Spartan({ 
+  subsets: ['latin'],
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
+  variable: "--font-league_Spartan",
+});
 
 export function generateStaticParams() {
   return [{ locale: 'cs' }, { locale: 'de' }, { locale: 'en' }];
@@ -29,16 +37,8 @@ export default async function LocaleLayout({
   }
 
   return (
-    <html lang={locale} className="light scroll-smooth" dir="ltr">
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </head>
-      <body className="font-body text-base text-black dark:text-white dark:bg-slate-900">
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          {children}
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <NextIntlClientProvider locale={locale} messages={messages}>
+      {children}
+    </NextIntlClientProvider>
   );
 } 

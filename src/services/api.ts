@@ -1,33 +1,5 @@
 import axios from 'axios';
-
-export interface Property {
-    id: number;
-    name: string;
-    description: string;
-    price: number;
-    city: string;
-    street: string;
-    country: string;
-    size: string;
-    beds: string;
-    baths: string;
-    category: {
-        id: number;
-        name: string;
-        slug: string;
-        image: string;
-    };
-    status: 'ACTIVE' | 'SOLD';
-    ownershipType: 'RENT' | 'OWNERSHIP';
-    images: Array<{
-        id: number;
-        url: string;
-        isMain: boolean;
-        order: number;
-    }>;
-    createdAt: string;
-    updatedAt: string;
-}
+import { Property, PropertyResponse } from '@/types/property';
 
 export interface Pagination {
     total: number;
@@ -41,19 +13,91 @@ export interface PaginatedResponse {
     pagination: Pagination;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+
+const transformProperty = (data: any): Property => ({
+    id: data.id,
+    name: data.name,
+    categoryId: data.category.id,
+    category: {
+        id: data.category.id,
+        name: data.category.name
+    },
+    status: data.status,
+    ownershipType: data.ownershipType,
+    description: data.description,
+    city: data.city,
+    street: data.street,
+    country: data.country,
+    latitude: data.latitude || null,
+    longitude: data.longitude || null,
+    virtualTour: data.virtualTour || null,
+    videoUrl: data.videoUrl || null,
+    size: data.size,
+    beds: data.beds,
+    baths: data.baths,
+    layout: data.layout || null,
+    files: data.files || null,
+    price: Number(data.price),
+    discountedPrice: data.discountedPrice ? Number(data.discountedPrice) : null,
+    buildingStoriesNumber: data.buildingStoriesNumber || null,
+    buildingCondition: data.buildingCondition || null,
+    apartmentCondition: data.apartmentCondition || null,
+    aboveGroundFloors: data.aboveGroundFloors || null,
+    reconstructionYearApartment: data.reconstructionYearApartment || null,
+    reconstructionYearBuilding: data.reconstructionYearBuilding || null,
+    totalAboveGroundFloors: data.totalAboveGroundFloors || null,
+    totalUndergroundFloors: data.totalUndergroundFloors || null,
+    floorArea: data.floorArea || null,
+    builtUpArea: data.builtUpArea || null,
+    gardenHouseArea: data.gardenHouseArea || null,
+    terraceArea: data.terraceArea || null,
+    totalLandArea: data.totalLandArea || null,
+    gardenArea: data.gardenArea || null,
+    garageArea: data.garageArea || null,
+    balconyArea: data.balconyArea || null,
+    pergolaArea: data.pergolaArea || null,
+    basementArea: data.basementArea || null,
+    workshopArea: data.workshopArea || null,
+    totalObjectArea: data.totalObjectArea || null,
+    usableArea: data.usableArea || null,
+    landArea: data.landArea || null,
+    objectType: data.objectType || null,
+    objectLocationType: data.objectLocationType || null,
+    houseEquipment: data.houseEquipment || null,
+    accessRoad: data.accessRoad || null,
+    objectCondition: data.objectCondition || null,
+    reservationPrice: data.reservationPrice || null,
+    equipmentDescription: data.equipmentDescription || null,
+    additionalSources: data.additionalSources || null,
+    buildingPermit: data.buildingPermit || null,
+    buildability: data.buildability || null,
+    utilitiesOnLand: data.utilitiesOnLand || null,
+    utilitiesOnAdjacentRoad: data.utilitiesOnAdjacentRoad || null,
+    payments: data.payments || null,
+    brokerId: data.brokerId || null,
+    secondaryAgent: data.secondaryAgent || null,
+    createdAt: data.createdAt,
+    updatedAt: data.updatedAt,
+    images: data.images || [],
+    floorplans: data.floorplans || [],
+    reviews: data.reviews || []
+});
 
 export const propertyApi = {
-    getAll: async (page = 1, limit = 12, search = ''): Promise<PaginatedResponse> => {
+    getAll: async (page = 1, limit = 12, search = ''): Promise<PropertyResponse> => {
         const response = await axios.get(`${API_BASE_URL}/properties`, {
             params: { page, limit, search }
         });
-        return response.data;
+        return {
+            properties: response.data.properties.map(transformProperty),
+            pagination: response.data.pagination
+        };
     },
 
     getById: async (id: number): Promise<Property> => {
         const response = await axios.get(`${API_BASE_URL}/properties/${id}`);
-        return response.data;
+        return transformProperty(response.data);
     },
 
     create: async (propertyData: FormData): Promise<Property> => {
@@ -62,12 +106,12 @@ export const propertyApi = {
                 'Content-Type': 'multipart/form-data',
             },
         });
-        return response.data;
+        return transformProperty(response.data);
     },
 
     update: async (id: number, propertyData: Partial<Property>): Promise<Property> => {
         const response = await axios.put(`${API_BASE_URL}/properties/${id}`, propertyData);
-        return response.data;
+        return transformProperty(response.data);
     },
 
     delete: async (id: number): Promise<void> => {

@@ -3,7 +3,7 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 
-import Wrapper from "../../components/wrapper";
+import Wrapper from "@/components/wrapper";
 
 import { blogData, recentPost } from "../../../data/data";
 import { FiFacebook, FiGithub, FiGitlab, FiInstagram, FiLinkedin, FiMail, FiMessageCircle, FiTwitter, FiUser, FiYoutube } from "react-icons/fi";

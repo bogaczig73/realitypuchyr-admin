@@ -21,6 +21,7 @@
     "filter": "Filtrovat nemovitosti",
     "sort": "Řadit podle",
     "view": "Zobrazit detaily",
+    "search": "Hledat",
     "details": {
       "title": "Detaily nemovitosti",
       "description": "Popis",
@@ -115,6 +116,8 @@
     "profileSettings": "Nastavení profilu",
     "blog": "Blog",
     "blogs": "Blogy",
+    "properties": "Nemovitosti",
+    "propertyDetail": "Detail nemovitosti",
     "blogDetail": "Detail blogu",
     "pages": "Stránky",
     "starter": "Úvodní",

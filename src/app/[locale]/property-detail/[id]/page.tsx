@@ -4,7 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import Wrapper from "@/components/wrapper";
 import { useParams, useRouter } from "next/navigation";
-import { propertyApi, Property } from "@/services/api";
+import { propertyApi } from "@/services/api";
+import { Property } from "@/types/property";
 import { useTranslations } from 'next-intl';
 
 export default function PropertyDetail() {
@@ -469,16 +470,6 @@ export default function PropertyDetail() {
                                     </div>
 
                                     <ul className="list-none mt-4">
-                                        <li className="flex justify-between items-center">
-                                            <span className="text-slate-400 text-sm">{t('fields.rating')}</span>
-                                            <span className="font-medium text-sm">
-                                                {t('fields.ratingWithCount', { 
-                                                    rating: Number(property.rating).toFixed(1),
-                                                    count: property.reviewCount 
-                                                })}
-                                            </span>
-                                        </li>
-
                                         <li className="flex justify-between items-center mt-2">
                                             <span className="text-slate-400 text-sm">{t('fields.listedOn')}</span>
                                             <span className="font-medium text-sm">

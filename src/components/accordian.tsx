@@ -1,7 +1,7 @@
 'use client'
 import React,{useState} from "react"
 
-import { accordianData } from "../data/data"
+import { accordianData } from "@/app/data/data"
 import { FiChevronDown } from "react-icons/fi"
 
 interface AccordianData{

@@ -1,8 +1,8 @@
 import React from "react";
 import Link from "next/link";
 
-import Wrapper from "../components/wrapper";
-import UplodProfileImg from "../components/uplodProfileImg";
+import Wrapper from "@/components/wrapper";
+import UplodProfileImg from "@/components/uplodProfileImg";
 import { FiBookmark, FiGlobe, FiKey, FiMail, FiMessageCircle, FiPhone, FiUser, FiUserCheck } from "react-icons/fi";
 
 export default function ProfileSetting(){

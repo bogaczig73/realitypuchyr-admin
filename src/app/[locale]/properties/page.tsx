@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Wrapper from "@/components/wrapper";
@@ -10,6 +10,18 @@ import { propertyApi } from '@/services/api';
 import { useTranslations } from 'next-intl';
 
 export default function ExploreProperty() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            </div>
+        }>
+            <ExplorePropertyContent />
+        </Suspense>
+    );
+}
+
+function ExplorePropertyContent() {
     const [properties, setProperties] = useState<Property[]>([]);
     const [pagination, setPagination] = useState<Pagination>({
         total: 0,
@@ -162,7 +174,7 @@ export default function ExploreProperty() {
                                             <ul className="py-6 border-y border-slate-100 dark:border-gray-800 flex items-center list-none">
                                                 <li className="flex items-center me-4">
                                                     <i className="mdi mdi-arrow-expand-all text-2xl me-2 text-green-600"></i>
-                                                    <span>{item.sqf}</span>
+                                                    <span>{item.size} m²</span>
                                                 </li>
 
                                                 <li className="flex items-center me-4">

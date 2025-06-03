@@ -1,7 +1,8 @@
 'use client'
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { propertyApi, Property } from "@/services/api";
+import { propertyApi } from "@/services/api";
+import { Property } from "@/types/property";
 import { useTranslations } from 'next-intl';
 import Wrapper from "@/components/wrapper";
 

@@ -2,8 +2,8 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 
-import Switcher from "../components/switcher";
-import BackToHome from "../components/backToHome";
+import Switcher from "@/components/switcher";
+import BackToHome from "@/components/backToHome";
 
 export default function ResetPassword(){
     return(

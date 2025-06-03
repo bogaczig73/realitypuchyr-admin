@@ -6,17 +6,30 @@ export interface PropertyImage {
     createdAt: string;
 }
 
+export interface PropertyFloorplan {
+    id: number;
+    url: string;
+    propertyId: number;
+    createdAt: string;
+}
+
+export interface Review {
+    id: number;
+    content: string;
+    rating: number;
+    propertyId: number;
+    createdAt: string;
+}
+
 export interface Property {
     id: number;
     name: string;
-    image: string;
-    sqf: string;
-    beds: string;
-    baths: string;
-    price: number;
-    layout: string;
-    category: string;
-    status: string;
+    categoryId: number;
+    category: {
+        id: number;
+        name: string;
+    };
+    status: 'ACTIVE' | 'INACTIVE' | 'SOLD' | 'RESERVED';
     ownershipType: string;
     description: string;
     city: string;
@@ -27,6 +40,12 @@ export interface Property {
     virtualTour: string | null;
     videoUrl: string | null;
     size: string;
+    beds: string;
+    baths: string;
+    layout: string | null;
+    files: any | null;
+    price: number;
+    discountedPrice: number | null;
     buildingStoriesNumber: string | null;
     buildingCondition: string | null;
     apartmentCondition: string | null;
@@ -67,6 +86,8 @@ export interface Property {
     createdAt: string;
     updatedAt: string;
     images: PropertyImage[];
+    floorplans: PropertyFloorplan[];
+    reviews: Review[];
 }
 
 export interface Pagination {
@@ -76,7 +97,7 @@ export interface Pagination {
     limit: number;
 }
 
-export interface PaginatedResponse {
+export interface PropertyResponse {
     properties: Property[];
     pagination: Pagination;
 } 

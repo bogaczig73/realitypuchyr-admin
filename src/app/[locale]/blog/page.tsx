@@ -4,8 +4,8 @@ import Image from "next/image";
 
 import { blogData } from "../../data/data";
 
-import Wrapper from "../components/wrapper";
-import AddBlog from "../components/addBlog";
+import Wrapper from "@/components/wrapper";
+import AddBlog from "@/components/addBlog";
 
 interface BlogData{
     id: number;

@@ -21,6 +21,7 @@
     "filter": "Immobilien filtern",
     "sort": "Sortieren nach",
     "view": "Details anzeigen",
+    "search": "Suchen",
     "details": {
       "title": "Immobiliendetails",
       "description": "Beschreibung",
@@ -93,7 +94,8 @@
         "ratingWithCount": "{rating} ({count} Bewertungen)",
         "files": "Angehängte Dateien",
         "reviewCount": "Bewertungen",
-        "listedOn": "Eingestellt am"
+        "listedOn": "Eingestellt am",
+        "buildingStoriesNumber": "Anzahl der Geschosse"
       },
       "actions": {
         "bookNow": "Jetzt buchen",
@@ -132,6 +134,8 @@
     "comingSoon": "Demnächst",
     "maintenance": "Wartung",
     "error": "Fehler",
+    "properties": "Immobilien",
+    "propertyDetail": "Immobilien-Details",
     "thankYou": "Danke"
   }
 } 
