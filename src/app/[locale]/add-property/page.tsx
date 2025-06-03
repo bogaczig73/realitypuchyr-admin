@@ -14,6 +14,8 @@ interface Category {
     image: string;
 }
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+
 export default function AddProperty(){
     const [categories, setCategories] = useState<Category[]>([]);
     const [formData, setFormData] = useState({
@@ -87,7 +89,7 @@ export default function AddProperty(){
         // Fetch categories when component mounts
         const fetchCategories = async () => {
             try {
-                const response = await fetch('http://localhost:3001/api/categories');
+                const response = await fetch(`${API_BASE_URL}/categories`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch categories');
                 }
@@ -160,7 +162,7 @@ export default function AddProperty(){
             });
 
             // Send the request
-            const response = await fetch('http://localhost:3001/api/properties', {
+            const response = await fetch(`${API_BASE_URL}/properties`, {
                 method: 'POST',
                 body: formDataToSend,
                 // Remove the Content-Type header to let the browser set it with the boundary
