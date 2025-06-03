@@ -1,0 +1,44 @@
+{
+  "name": "hously",
+  "version": "2.5.0",
+  "description": "Hously - Next Js Real Estate Landing & Admin Dashboard Template",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.0.17",
+    "@types/react-responsive-masonry": "^2.6.0",
+    "axios": "^1.9.0",
+    "jsvectormap": "^1.6.0",
+    "next": "15.2.4",
+    "next-intl": "^4.1.0",
+    "react": "^19.1.0",
+    "react-apexcharts": "^1.7.0",
+    "react-countup": "^6.5.3",
+    "react-dom": "^19.1.0",
+    "react-feather": "^2.0.10",
+    "react-icons": "^5.5.0",
+    "react-responsive-masonry": "^2.7.1",
+    "react-scroll": "^1.9.3",
+    "react-select": "^5.10.1",
+    "react-type-animation": "^3.2.0",
+    "simplebar-react": "^3.3.0",
+    "tiny-slider-react": "^0.5.7",
+    "yet-another-react-lightbox": "^3.21.9"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/react-scroll": "^1.8.10",
+    "@types/tiny-slider-react": "^0.3.8",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.0.17",
+    "typescript": "^5"
+  }
+}
