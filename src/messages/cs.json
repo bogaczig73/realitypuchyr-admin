@@ -41,6 +41,7 @@
       "noEquipment": "Popis vybavení není k dispozici",
       "noEquipmentDescription": "Popis vybavení není k dispozici",
       "noSources": "Žádné další zdroje nejsou k dispozici",
+      "noAdditionalSources": "Žádné další zdroje nejsou k dispozici",
       "fields": {
         "category": "Kategorie",
         "status": "Stav",
@@ -95,7 +96,8 @@
         "reviewCount": "Recenze",
         "rating": "Hodnocení",
         "ratingWithCount": "{rating} ({count} recenzí)",
-        "listedOn": "Zveřejněno dne"
+        "listedOn": "Zveřejněno dne",
+        "floorplans": "Půdorysy"
       },
       "actions": {
         "bookNow": "Rezervovat",
@@ -107,7 +109,7 @@
   },
   "Sidebar": {
     "dashboard": "Přehled",
-    "exploreProperties": "Prozkoumat nemovitosti",
+    "properties": "Nemovitosti",
     "favoriteProperties": "Oblíbené nemovitosti",
     "addProperties": "Přidat nemovitosti",
     "chat": "Chat",
@@ -116,8 +118,6 @@
     "profileSettings": "Nastavení profilu",
     "blog": "Blog",
     "blogs": "Blogy",
-    "properties": "Nemovitosti",
-    "propertyDetail": "Detail nemovitosti",
     "blogDetail": "Detail blogu",
     "pages": "Stránky",
     "starter": "Úvodní",

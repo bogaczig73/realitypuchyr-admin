@@ -38,6 +38,7 @@
       "noDescription": "Keine Beschreibung verfügbar",
       "noDocuments": "Keine Dokumente angehängt",
       "noDocumentsAttached": "Keine Dokumente angehängt",
+      "noAdditionalSources": "Keine zusätzlichen Quellen verfügbar",
       "noEquipment": "Keine Ausstattungsbeschreibung verfügbar",
       "noEquipmentDescription": "Keine Ausstattungsbeschreibung verfügbar",
       "noSources": "Keine zusätzlichen Quellen verfügbar",
@@ -95,7 +96,8 @@
         "files": "Angehängte Dateien",
         "reviewCount": "Bewertungen",
         "listedOn": "Eingestellt am",
-        "buildingStoriesNumber": "Anzahl der Geschosse"
+        "buildingStoriesNumber": "Anzahl der Geschosse",
+        "floorplans": "Grundrisse"
       },
       "actions": {
         "bookNow": "Jetzt buchen",

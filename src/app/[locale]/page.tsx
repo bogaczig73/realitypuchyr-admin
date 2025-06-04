@@ -11,8 +11,6 @@ import Charts from '@/components/charts'
 import ScrollBar from '@/components/scrollbar'
 
 import { counterData, salesData, recentTransection, topProperties } from '@/app/data/data'
-
-console.log(process.env.NEXT_PUBLIC_API_URL);
 interface CounterData{
     icon: string;
     title: string;

@@ -97,7 +97,8 @@
         "video": "Video",
         "virtualTour": "Virtual Tour",
         "attachedDocuments": "Attached Documents",
-        "listedOn": "Listed On"
+        "listedOn": "Listed On",
+        "floorplans": "Floor Plans"
       },
       "actions": {
         "bookNow": "Book Now",

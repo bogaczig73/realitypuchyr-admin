@@ -147,7 +147,7 @@ function ExplorePropertyContent() {
                                                 <div className="absolute inset-0 bg-gray-200 animate-pulse"></div>
                                             )}
                                             <Image 
-                                                src={item.images[0]?.url || '/images/placeholder.jpg'} 
+                                                src={item.images[0]?.url || '/images/placeholder-image.jpg'} 
                                                 width={0} 
                                                 height={0} 
                                                 sizes="100vw" 

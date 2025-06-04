@@ -19,6 +19,7 @@ export default function PropertyDetail() {
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
 
     useEffect(() => {
         const fetchProperty = async () => {
@@ -60,6 +61,23 @@ export default function PropertyDetail() {
         } finally {
             setIsDeleting(false);
             setShowDeleteModal(false);
+        }
+    };
+
+    const handleStatusToggle = async () => {
+        if (!property) return;
+        
+        try {
+            setIsUpdating(true);
+            setError(null);
+            const newStatus = property.status === 'ACTIVE' ? 'SOLD' : 'ACTIVE';
+            const updatedProperty = await propertyApi.updateState(id, newStatus);
+            setProperty(updatedProperty);
+        } catch (err) {
+            console.error('Error updating property status:', err);
+            setError(err instanceof Error ? err.message : 'Failed to update property status. Please try again later.');
+        } finally {
+            setIsUpdating(false);
         }
     };
 
@@ -112,6 +130,17 @@ export default function PropertyDetail() {
 
                         <div className="flex items-center gap-4">
                             <button
+                                onClick={handleStatusToggle}
+                                disabled={isUpdating}
+                                className={`px-4 py-2 rounded-md transition-colors ${
+                                    property.status === 'ACTIVE' 
+                                        ? 'bg-yellow-600 hover:bg-yellow-700' 
+                                        : 'bg-green-600 hover:bg-green-700'
+                                } text-white`}
+                            >
+                                {isUpdating ? 'Updating...' : property.status === 'ACTIVE' ? 'Mark as Sold' : 'Mark as Active'}
+                            </button>
+                            <button
                                 onClick={handleEdit}
                                 className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
                             >
@@ -142,9 +171,10 @@ export default function PropertyDetail() {
                         {/* Main Image */}
                         <div className="relative w-full h-[400px] rounded-lg overflow-hidden">
                             <Image 
-                                src={selectedImage || '/placeholder-image.jpg'} 
+                                src={selectedImage || '/images/placeholder-image.jpg'} 
                                 alt={property.name}
                                 fill
+                                unoptimized
                                 style={{ objectFit: 'cover' }}
                                 className="rounded-lg"
                             />
@@ -165,6 +195,7 @@ export default function PropertyDetail() {
                                             src={image.url} 
                                             alt={`${property.name} - Image ${index + 1}`}
                                             fill
+                                            unoptimized
                                             style={{ objectFit: 'cover' }}
                                             className="rounded-lg"
                                         />
@@ -561,6 +592,32 @@ export default function PropertyDetail() {
                                                 allowFullScreen
                                                 title="Virtual Tour"
                                             />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Floorplans */}
+                            {property.floorplans && property.floorplans.length > 0 && (
+                                <div className="mt-6 rounded-md bg-white dark:bg-slate-900 shadow-sm shadow-gray-200 dark:shadow-gray-700">
+                                    <div className="p-6">
+                                        <h5 className="text-lg font-semibold mb-4 text-green-600">{t('fields.floorplans')}</h5>
+                                        <div className="space-y-4">
+                                            {property.floorplans.map((floorplan) => (
+                                                <div key={floorplan.id} className="bg-gray-50 dark:bg-slate-800 rounded-lg p-4">
+                                                    <h6 className="font-medium mb-2">{floorplan.name}</h6>
+                                                    <div className="relative w-full h-[300px] rounded-lg overflow-hidden">
+                                                        <Image
+                                                            src={floorplan.url}
+                                                            alt={floorplan.name}
+                                                            fill
+                                                            unoptimized
+                                                            style={{ objectFit: 'contain' }}
+                                                            className="rounded-lg"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
                                 </div>

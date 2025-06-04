@@ -9,6 +9,7 @@ export interface PropertyImage {
 export interface PropertyFloorplan {
     id: number;
     url: string;
+    name: string;
     propertyId: number;
     createdAt: string;
 }

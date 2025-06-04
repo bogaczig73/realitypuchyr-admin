@@ -6,6 +6,7 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 const nextConfig = {
   images: {
     domains: ['d2ibq52z3bzi2i.cloudfront.net'],
+    
   },
 }
 
