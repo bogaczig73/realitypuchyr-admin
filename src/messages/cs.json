@@ -34,7 +34,7 @@
       "additionalSources": "Další zdroje",
       "attachedDocuments": "Přiložené dokumenty",
       "virtualTour": "Virtuální prohlídka",
-      "video": "Video",
+      "videoTour": "Video",
       "noDescription": "Popis není k dispozici",
       "noDocuments": "Žádné dokumenty nejsou přiloženy",
       "noDocumentsAttached": "Žádné dokumenty nejsou připojeny",
@@ -97,7 +97,13 @@
         "rating": "Hodnocení",
         "ratingWithCount": "{rating} ({count} recenzí)",
         "listedOn": "Zveřejněno dne",
-        "floorplans": "Půdorysy"
+        "floorplans": "Půdorysy",
+        "additionalDocuments": "Další dokumenty",
+        "equipmentDescription": "Popis vybavení",
+        "additionalSources": "Další zdroje",
+        "attachedDocuments": "Přiložené dokumenty",
+        "virtualTour": "Virtuální prohlídka",
+        "videoTour": "Video"
       },
       "actions": {
         "bookNow": "Rezervovat",

@@ -6,7 +6,7 @@ import { handleApiError, ApiError } from '../errors';
 import { api } from '../api';
 
 export const propertyService = {
-    async getProperties(page: number = 1, limit: number = 12, search: string = "", locale: string = 'en'): Promise<PropertyResponse> {
+    async getProperties(page: number = 1, limit: number = 12, search: string = "", locale: string = 'cs'): Promise<PropertyResponse> {
         try {
             const response = await api.get(API_ENDPOINTS.properties.list(locale), {
                 params: { page, limit, search }
