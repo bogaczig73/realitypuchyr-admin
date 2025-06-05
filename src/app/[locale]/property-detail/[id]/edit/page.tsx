@@ -50,9 +50,9 @@ export default function EditProperty() {
                 city: formData.get('city') as string,
                 street: formData.get('street') as string,
                 country: formData.get('country') as string,
-                size: formData.get('size') as string,
-                beds: formData.get('beds') as string,
-                baths: formData.get('baths') as string,
+                size: parseFloat(formData.get('size') as string),
+                beds: parseInt(formData.get('beds') as string),
+                baths: parseInt(formData.get('baths') as string),
                 // Add other fields as needed
             };
 

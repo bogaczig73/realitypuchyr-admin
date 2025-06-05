@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { Property, PropertyResponse } from '@/types/property';
+import { Category } from '@/types/category';
 
 export interface Pagination {
     total: number;
@@ -15,14 +16,20 @@ export interface PaginatedResponse {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
+const transformCategory = (data: any): Category => ({
+    id: data.id,
+    name: data.name,
+    slug: data.slug || '',
+    image: data.image || '',
+    createdAt: data.createdAt || new Date().toISOString(),
+    updatedAt: data.updatedAt || new Date().toISOString()
+});
+
 const transformProperty = (data: any): Property => ({
     id: data.id,
     name: data.name,
     categoryId: data.category.id,
-    category: {
-        id: data.category.id,
-        name: data.category.name
-    },
+    category: transformCategory(data.category),
     status: data.status,
     ownershipType: data.ownershipType,
     description: data.description,
@@ -77,11 +84,12 @@ const transformProperty = (data: any): Property => ({
     payments: data.payments || null,
     brokerId: data.brokerId || null,
     secondaryAgent: data.secondaryAgent || null,
-    createdAt: data.createdAt,
-    updatedAt: data.updatedAt,
+    createdAt: data.createdAt || new Date().toISOString(),
+    updatedAt: data.updatedAt || new Date().toISOString(),
     images: data.images || [],
     floorplans: data.floorplans || [],
-    reviews: data.reviews || []
+    reviews: data.reviews || [],
+    translations: data.translations || []
 });
 
 export const propertyApi = {

@@ -13,7 +13,7 @@ export const propertyService = {
             });
             return response.data;
         } catch (error) {
-            throw new ApiError('Failed to fetch properties', error);
+            return handleApiError(error, 'Failed to fetch properties');
         }
     },
 
@@ -22,7 +22,7 @@ export const propertyService = {
             const response = await api.get(API_ENDPOINTS.properties.detail(locale, id));
             return transformProperty(response.data);
         } catch (error) {
-            throw new ApiError('Failed to fetch property details', error);
+            return handleApiError(error, 'Failed to fetch property details');
         }
     },
 
@@ -35,7 +35,7 @@ export const propertyService = {
             });
             return transformProperty(response.data);
         } catch (error) {
-            throw new ApiError('Failed to create property', error);
+            return handleApiError(error, 'Failed to create property');
         }
     },
 
@@ -44,7 +44,7 @@ export const propertyService = {
             const response = await api.put(API_ENDPOINTS.properties.update(locale, id), data);
             return transformProperty(response.data);
         } catch (error) {
-            throw new ApiError('Failed to update property', error);
+            return handleApiError(error, 'Failed to update property');
         }
     },
 
@@ -52,7 +52,7 @@ export const propertyService = {
         try {
             await api.delete(API_ENDPOINTS.properties.delete(locale, id));
         } catch (error) {
-            throw new ApiError('Failed to delete property', error);
+            return handleApiError(error, 'Failed to delete property');
         }
     },
 
@@ -61,7 +61,7 @@ export const propertyService = {
             const response = await api.patch(API_ENDPOINTS.properties.updateState(locale, id), { status });
             return transformProperty(response.data);
         } catch (error) {
-            throw new ApiError('Failed to update property status', error);
+            return handleApiError(error, 'Failed to update property status');
         }
     },
 
@@ -70,7 +70,7 @@ export const propertyService = {
             const response = await api.get(API_ENDPOINTS.properties.top(locale, limit));
             return response.data.properties.map(transformProperty);
         } catch (error) {
-            throw new ApiError('Failed to fetch top properties', error);
+            return handleApiError(error, 'Failed to fetch top properties');
         }
     }
 }; 
