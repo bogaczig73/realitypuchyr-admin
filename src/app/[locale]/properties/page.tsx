@@ -4,10 +4,10 @@ import Link from "next/link";
 import Image from "next/image";
 import Wrapper from "@/components/wrapper";
 import { Property, Pagination } from "@/types/property";
-import { propertyService } from "@/services/propertyService";
+import { propertyService } from "@/api/services/property";
 import { useSearchParams, useParams } from 'next/navigation';
-import { propertyApi } from '@/services/api';
 import { useTranslations } from 'next-intl';
+import { ApiError } from "@/api/errors";
 
 export default function ExploreProperty() {
     return (
@@ -44,12 +44,15 @@ function ExplorePropertyContent() {
         try {
             setLoading(true);
             setError(null);
-            const response = await propertyApi.getAll(page, 12, search);
+            const response = await propertyService.getProperties(page, 12, search);
             setProperties(response.properties);
             setPagination(response.pagination);
-        } catch (error) {
-            setError('Failed to load properties. Please try again later.');
-            console.error('Error fetching properties:', error);
+        } catch (err) {
+            const errorMessage = err instanceof ApiError 
+                ? err.message 
+                : 'Failed to load properties. Please try again later.';
+            setError(errorMessage);
+            console.error('Error fetching properties:', err);
         } finally {
             setLoading(false);
         }

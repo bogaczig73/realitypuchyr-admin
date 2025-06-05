@@ -4,9 +4,10 @@ import Link from "next/link";
 import Image from "next/image";
 import Wrapper from "@/components/wrapper";
 import { useParams, useRouter } from "next/navigation";
-import { propertyApi } from "@/services/api";
+import { propertyService } from "@/api/services/property";
 import { Property } from "@/types/property";
 import { useTranslations } from 'next-intl';
+import { ApiError } from "@/api/errors";
 
 export default function PropertyDetail() {
     const params = useParams();
@@ -27,8 +28,7 @@ export default function PropertyDetail() {
         const fetchProperty = async () => {
             try {
                 setLoading(true);
-                const data = await propertyApi.getById(id);
-                console.log('Property data:', data);
+                const data = await propertyService.getPropertyById(id, params.locale as string);
                 setProperty(data);
                 // Set the first image as selected by default
                 if (data.images && data.images.length > 0) {
@@ -36,7 +36,10 @@ export default function PropertyDetail() {
                 }
                 setError(null);
             } catch (err) {
-                setError('Failed to load property details. Please try again later.');
+                const errorMessage = err instanceof ApiError 
+                    ? err.message 
+                    : 'Failed to load property details. Please try again later.';
+                setError(errorMessage);
                 console.error('Error fetching property:', err);
             } finally {
                 setLoading(false);
@@ -46,7 +49,7 @@ export default function PropertyDetail() {
         if (id) {
             fetchProperty();
         }
-    }, [id]);
+    }, [id, params.locale]);
 
     const handleEdit = () => {
         router.push(`/property-detail/${id}/edit`);
@@ -55,11 +58,14 @@ export default function PropertyDetail() {
     const handleDelete = async () => {
         try {
             setIsDeleting(true);
-            await propertyApi.delete(id);
+            await propertyService.deleteProperty(id, params.locale as string);
             router.push('/properties');
         } catch (err) {
+            const errorMessage = err instanceof ApiError 
+                ? err.message 
+                : 'Failed to delete property. Please try again later.';
+            setError(errorMessage);
             console.error('Error deleting property:', err);
-            setError('Failed to delete property. Please try again later.');
         } finally {
             setIsDeleting(false);
             setShowDeleteModal(false);
@@ -73,11 +79,14 @@ export default function PropertyDetail() {
             setIsUpdating(true);
             setError(null);
             const newStatus = property.status === 'ACTIVE' ? 'SOLD' : 'ACTIVE';
-            const updatedProperty = await propertyApi.updateState(id, newStatus);
+            const updatedProperty = await propertyService.updatePropertyState(id, newStatus, params.locale as string);
             setProperty(updatedProperty);
         } catch (err) {
+            const errorMessage = err instanceof ApiError 
+                ? err.message 
+                : 'Failed to update property status. Please try again later.';
+            setError(errorMessage);
             console.error('Error updating property status:', err);
-            setError(err instanceof Error ? err.message : 'Failed to update property status. Please try again later.');
         } finally {
             setIsUpdating(false);
         }

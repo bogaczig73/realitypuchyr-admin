@@ -1,12 +1,22 @@
+/**
+ * @deprecated This service is deprecated. Please use the new unified API implementation from '@/api/services/property' instead.
+ * This file will be removed in a future update.
+ */
+
 import { Property, PropertyResponse } from '@/types/property';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 export const propertyService = {
-    async getProperties(page: number = 1, limit: number = 12, search: string = ""): Promise<PropertyResponse> {
+    async getProperties(page: number = 1, limit: number = 12, search: string = "", locale: string = 'en'): Promise<PropertyResponse> {
         try {
             const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
-            const response = await fetch(`${API_BASE_URL}/properties?page=${page}&limit=${limit}${searchParam}`);
+            const response = await fetch(`${API_BASE_URL}/properties?page=${page}&limit=${limit}${searchParam}`, {
+                headers: {
+                    'Accept-Language': locale,
+                    'Content-Type': 'application/json',
+                },
+            });
             if (!response.ok) {
                 throw new Error('Failed to fetch properties');
             }
@@ -77,7 +87,8 @@ export const propertyService = {
                     updatedAt: p.updatedAt,
                     images: p.images || [],
                     floorplans: p.floorplans || [],
-                    reviews: p.reviews || []
+                    reviews: p.reviews || [],
+                    translations: p.translations || {}
                 })),
                 pagination: data.pagination
             };
@@ -87,9 +98,11 @@ export const propertyService = {
         }
     },
 
-    async getPropertyById(id: number): Promise<Property> {
+    async getPropertyById(id: number, locale: string = 'en'): Promise<Property> {
         try {
-            const response = await fetch(`${API_BASE_URL}/properties/${id}`);
+            console.log('Fetching property by ID:', locale);
+            const response = await fetch(`${API_BASE_URL}/${locale}/properties/${id}`, {
+            });
             if (!response.ok) {
                 throw new Error('Failed to fetch property');
             }
@@ -159,7 +172,8 @@ export const propertyService = {
                 updatedAt: property.updatedAt,
                 images: property.images || [],
                 floorplans: property.floorplans || [],
-                reviews: property.reviews || []
+                reviews: property.reviews || [],
+                translations: property.translations || {}
             };
         } catch (error) {
             console.error('Error in getPropertyById:', error);
@@ -167,9 +181,14 @@ export const propertyService = {
         }
     },
 
-    async getTopProperties(limit: number = 5): Promise<Property[]> {
+    async getTopProperties(limit: number = 5, locale: string = 'en'): Promise<Property[]> {
         try {
-            const response = await fetch(`${API_BASE_URL}/properties?limit=${limit}&sort=rating`);
+            const response = await fetch(`${API_BASE_URL}/properties?limit=${limit}&sort=rating`, {
+                headers: {
+                    'Accept-Language': locale,
+                    'Content-Type': 'application/json',
+                },
+            });
             if (!response.ok) {
                 throw new Error('Failed to fetch top properties');
             }
@@ -239,7 +258,8 @@ export const propertyService = {
                 updatedAt: p.updatedAt,
                 images: p.images || [],
                 floorplans: p.floorplans || [],
-                reviews: p.reviews || []
+                reviews: p.reviews || [],
+                translations: p.translations || {}
             }));
         } catch (error) {
             console.error('Error in getTopProperties:', error);
