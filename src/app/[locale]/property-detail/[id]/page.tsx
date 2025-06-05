@@ -20,6 +20,8 @@ export default function PropertyDetail() {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
+    const [selectedVideo, setSelectedVideo] = useState<string>('');
+    const [isVideoModalOpen, setIsVideoModalOpen] = useState<boolean>(false);
 
     useEffect(() => {
         const fetchProperty = async () => {
@@ -79,6 +81,40 @@ export default function PropertyDetail() {
         } finally {
             setIsUpdating(false);
         }
+    };
+
+    const buildYouTubeEmbedUrl = (url: string): string => {
+        // Extract video ID and any additional parameters
+        let videoId = '';
+        let params = '';
+
+        if (url.includes('youtu.be/')) {
+            const parts = url.split('youtu.be/')[1].split('?');
+            videoId = parts[0];
+            if (parts[1]) {
+                params = '?' + parts[1];
+            }
+        } else if (url.includes('youtube.com/watch')) {
+            const urlParams = new URLSearchParams(url.split('?')[1]);
+            videoId = urlParams.get('v') || '';
+            urlParams.delete('v');
+            if (urlParams.toString()) {
+                params = '?' + urlParams.toString();
+            }
+        } else if (url.includes('youtube.com/embed/')) {
+            return url; // Already in embed format
+        }
+
+        return `https://www.youtube.com/embed/${videoId}${params}`;
+    };
+
+    const handleVideoClick = (e: React.MouseEvent, videoUrl: string | null) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!videoUrl) return;
+        const embedUrl = buildYouTubeEmbedUrl(videoUrl);
+        setSelectedVideo(embedUrl);
+        setIsVideoModalOpen(true);
     };
 
     if (loading) {
@@ -623,17 +659,43 @@ export default function PropertyDetail() {
                                 </div>
                             )}
 
-                            {/* Video */}
+                            {/* Video Section */}
                             {property.videoUrl && (
                                 <div className="mt-6 rounded-md bg-white dark:bg-slate-900 shadow-sm shadow-gray-200 dark:shadow-gray-700">
                                     <div className="p-6">
-                                        <h5 className="text-lg font-semibold mb-4 text-green-600">{t('fields.video')}</h5>
+                                        <h5 className="text-lg font-semibold mb-4 text-green-600">{t('videoTour')}</h5>
                                         <div className="aspect-video w-full rounded-lg overflow-hidden">
                                             <iframe
-                                                src={property.videoUrl}
+                                                src={buildYouTubeEmbedUrl(property.videoUrl)}
                                                 className="w-full h-full"
+                                                frameBorder="0"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                                 allowFullScreen
-                                                title="Property Video"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Video Modal */}
+                            {isVideoModalOpen && (
+                                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+                                    <div className="relative w-full max-w-4xl mx-4">
+                                        <button
+                                            onClick={() => setIsVideoModalOpen(false)}
+                                            className="absolute -top-10 right-0 text-white hover:text-gray-300"
+                                        >
+                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                        <div className="aspect-video">
+                                            <iframe
+                                                src={selectedVideo}
+                                                className="w-full h-full rounded-lg"
+                                                frameBorder="0"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                allowFullScreen
                                             />
                                         </div>
                                     </div>

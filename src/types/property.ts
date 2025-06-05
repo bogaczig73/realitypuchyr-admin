@@ -1,7 +1,28 @@
+export enum PropertyStatus {
+    ACTIVE = 'ACTIVE',
+    SOLD = 'SOLD',
+    RENT = 'RENT'
+}
+
+export enum OwnershipType {
+    RENT = 'RENT',
+    OWNERSHIP = 'OWNERSHIP'
+}
+
+export interface Category {
+    id: number;
+    name: string;
+    slug: string;
+    image: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface PropertyImage {
     id: number;
     url: string;
     isMain: boolean;
+    order: number;
     propertyId: number;
     createdAt: string;
 }
@@ -16,22 +37,49 @@ export interface PropertyFloorplan {
 
 export interface Review {
     id: number;
-    content: string;
+    name: string;
+    description: string;
     rating: number;
-    propertyId: number;
+    propertyId: number | null;
     createdAt: string;
+    updatedAt: string;
+}
+
+export interface PropertyTranslation {
+    id: number;
+    propertyId: number;
+    language: string;
+    name: string;
+    description: string;
+    country: string;
+    size: string;
+    beds: string;
+    baths: string;
+    buildingCondition: string | null;
+    apartmentCondition: string | null;
+    objectType: string | null;
+    objectLocationType: string | null;
+    houseEquipment: string | null;
+    accessRoad: string | null;
+    objectCondition: string | null;
+    equipmentDescription: string | null;
+    additionalSources: string | null;
+    buildingPermit: string | null;
+    buildability: string | null;
+    utilitiesOnLand: string | null;
+    utilitiesOnAdjacentRoad: string | null;
+    payments: string | null;
+    createdAt: string;
+    updatedAt: string;
 }
 
 export interface Property {
     id: number;
     name: string;
     categoryId: number;
-    category: {
-        id: number;
-        name: string;
-    };
-    status: 'ACTIVE' | 'INACTIVE' | 'SOLD' | 'RESERVED';
-    ownershipType: string;
+    category: Category;
+    status: PropertyStatus;
+    ownershipType: OwnershipType;
     description: string;
     city: string;
     street: string;
@@ -40,35 +88,35 @@ export interface Property {
     longitude: number | null;
     virtualTour: string | null;
     videoUrl: string | null;
-    size: string;
-    beds: string;
-    baths: string;
+    size: number;
+    beds: number;
+    baths: number;
     layout: string | null;
     files: any | null;
     price: number;
     discountedPrice: number | null;
-    buildingStoriesNumber: string | null;
+    buildingStoriesNumber: number | null;
     buildingCondition: string | null;
     apartmentCondition: string | null;
-    aboveGroundFloors: string | null;
-    reconstructionYearApartment: string | null;
-    reconstructionYearBuilding: string | null;
-    totalAboveGroundFloors: string | null;
-    totalUndergroundFloors: string | null;
-    floorArea: string | null;
-    builtUpArea: string | null;
-    gardenHouseArea: string | null;
-    terraceArea: string | null;
-    totalLandArea: string | null;
-    gardenArea: string | null;
-    garageArea: string | null;
-    balconyArea: string | null;
-    pergolaArea: string | null;
-    basementArea: string | null;
-    workshopArea: string | null;
-    totalObjectArea: string | null;
-    usableArea: string | null;
-    landArea: string | null;
+    aboveGroundFloors: number | null;
+    reconstructionYearApartment: number | null;
+    reconstructionYearBuilding: number | null;
+    totalAboveGroundFloors: number | null;
+    totalUndergroundFloors: number | null;
+    floorArea: number | null;
+    builtUpArea: number | null;
+    gardenHouseArea: number | null;
+    terraceArea: number | null;
+    totalLandArea: number | null;
+    gardenArea: number | null;
+    garageArea: number | null;
+    balconyArea: number | null;
+    pergolaArea: number | null;
+    basementArea: number | null;
+    workshopArea: number | null;
+    totalObjectArea: number | null;
+    usableArea: number | null;
+    landArea: number | null;
     objectType: string | null;
     objectLocationType: string | null;
     houseEquipment: string | null;
@@ -89,6 +137,7 @@ export interface Property {
     images: PropertyImage[];
     floorplans: PropertyFloorplan[];
     reviews: Review[];
+    translations: PropertyTranslation[];
 }
 
 export interface Pagination {

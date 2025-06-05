@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { PropertyStatus, OwnershipType } from "@/types/property";
 
 import Wrapper from "@/components/wrapper";
 import ImageUpload from "@/components/imageUpload";
@@ -14,16 +15,75 @@ interface Category {
     image: string;
 }
 
+interface FormData {
+    [key: string]: string | PropertyStatus | OwnershipType;
+    name: string;
+    categoryId: string;
+    status: PropertyStatus;
+    ownershipType: OwnershipType;
+    description: string;
+    city: string;
+    street: string;
+    country: string;
+    latitude: string;
+    longitude: string;
+    virtualTour: string;
+    videoUrl: string;
+    size: string;
+    beds: string;
+    baths: string;
+    price: string;
+    discountedPrice: string;
+    layout: string;
+    buildingStoriesNumber: string;
+    buildingCondition: string;
+    apartmentCondition: string;
+    aboveGroundFloors: string;
+    reconstructionYearApartment: string;
+    reconstructionYearBuilding: string;
+    totalAboveGroundFloors: string;
+    totalUndergroundFloors: string;
+    floorArea: string;
+    builtUpArea: string;
+    gardenHouseArea: string;
+    terraceArea: string;
+    totalLandArea: string;
+    gardenArea: string;
+    garageArea: string;
+    balconyArea: string;
+    pergolaArea: string;
+    basementArea: string;
+    workshopArea: string;
+    totalObjectArea: string;
+    usableArea: string;
+    landArea: string;
+    objectType: string;
+    objectLocationType: string;
+    houseEquipment: string;
+    accessRoad: string;
+    objectCondition: string;
+    reservationPrice: string;
+    equipmentDescription: string;
+    additionalSources: string;
+    buildingPermit: string;
+    buildability: string;
+    utilitiesOnLand: string;
+    utilitiesOnAdjacentRoad: string;
+    payments: string;
+    brokerId: string;
+    secondaryAgent: string;
+}
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 export default function AddProperty(){
     const [categories, setCategories] = useState<Category[]>([]);
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<FormData>({
         // Basic Information
         name: '',
         categoryId: '',
-        status: 'ACTIVE',
-        ownershipType: 'OWNERSHIP',
+        status: PropertyStatus.ACTIVE,
+        ownershipType: OwnershipType.OWNERSHIP,
         description: '',
         city: '',
         street: '',
@@ -85,6 +145,9 @@ export default function AddProperty(){
         secondaryAgent: ''
     });
 
+    const [errors, setErrors] = useState<Record<string, string>>({});
+    const currentYear = new Date().getFullYear();
+
     useEffect(() => {
         // Fetch categories when component mounts
         const fetchCategories = async () => {
@@ -116,33 +179,135 @@ export default function AddProperty(){
             ...prev,
             [name]: value
         }));
+        // Clear error when user starts typing
+        if (errors[name]) {
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[name];
+                return newErrors;
+            });
+        }
+    };
+
+    const validateForm = () => {
+        const newErrors: Record<string, string> = {};
+        
+        // Validate year fields
+        if (formData.reconstructionYearApartment) {
+            const year = Number(formData.reconstructionYearApartment);
+            if (year < 1800 || year > currentYear) {
+                newErrors.reconstructionYearApartment = `Year must be between 1800 and ${currentYear}`;
+            }
+        }
+        
+        if (formData.reconstructionYearBuilding) {
+            const year = Number(formData.reconstructionYearBuilding);
+            if (year < 1800 || year > currentYear) {
+                newErrors.reconstructionYearBuilding = `Year must be between 1800 and ${currentYear}`;
+            }
+        }
+
+        // Validate numeric fields
+        const numericFields = [
+            'size', 'beds', 'baths', 'buildingStoriesNumber', 'aboveGroundFloors',
+            'totalAboveGroundFloors', 'totalUndergroundFloors'
+        ];
+
+        numericFields.forEach(field => {
+            if (formData[field] && Number(formData[field]) < 0) {
+                newErrors[field] = 'Value cannot be negative';
+            }
+        });
+
+        // Validate area fields
+        const areaFields = [
+            'floorArea', 'builtUpArea', 'gardenHouseArea', 'terraceArea',
+            'totalLandArea', 'gardenArea', 'garageArea', 'balconyArea',
+            'pergolaArea', 'basementArea', 'workshopArea', 'totalObjectArea',
+            'usableArea', 'landArea'
+        ];
+
+        areaFields.forEach(field => {
+            if (formData[field] && Number(formData[field]) < 0) {
+                newErrors[field] = 'Area cannot be negative';
+            }
+        });
+
+        // Validate price fields
+        const priceFields = ['price', 'discountedPrice', 'reservationPrice'];
+        priceFields.forEach(field => {
+            if (formData[field] && Number(formData[field]) < 0) {
+                newErrors[field] = 'Price cannot be negative';
+            }
+        });
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
+        if (!validateForm()) {
+            alert('Please fix the validation errors before submitting the form.');
+            return;
+        }
+        
         try {
-            // Create FormData object to handle file uploads
-            const formDataToSend = new FormData();
+            // Convert form data to proper types
+            const processedData: Record<string, any> = {};
             
-            // Add all form fields to FormData
             Object.entries(formData).forEach(([key, value]) => {
-                if (value !== '') {  // Only send non-empty values
-                    // Ensure enum values are properly formatted
-                    if (key === 'categoryId' || key === 'status' || key === 'ownershipType') {
-                        formDataToSend.append(key, value.toUpperCase());
+                // Skip empty strings and convert them to null
+                if (value === '') {
+                    processedData[key] = null;
+                    return;
+                }
+
+                if (key === 'categoryId' || key === 'status' || key === 'ownershipType') {
+                    processedData[key] = value.toUpperCase();
+                } else if (['size', 'beds', 'baths', 'buildingStoriesNumber', 'aboveGroundFloors', 
+                          'reconstructionYearApartment', 'reconstructionYearBuilding', 
+                          'totalAboveGroundFloors', 'totalUndergroundFloors'].includes(key)) {
+                    const numValue = Number(value);
+                    if (!isNaN(numValue) && numValue >= 0) {
+                        processedData[key] = Math.floor(numValue);
                     } else {
-                        formDataToSend.append(key, value);
+                        processedData[key] = null;
                     }
+                } else if (['price', 'discountedPrice', 'reservationPrice'].includes(key)) {
+                    const numValue = Number(value);
+                    if (!isNaN(numValue) && numValue >= 0) {
+                        processedData[key] = numValue;
+                    } else {
+                        processedData[key] = null;
+                    }
+                } else if (['floorArea', 'builtUpArea', 'gardenHouseArea', 'terraceArea', 
+                          'totalLandArea', 'gardenArea', 'garageArea', 'balconyArea', 
+                          'pergolaArea', 'basementArea', 'workshopArea', 'totalObjectArea', 
+                          'usableArea', 'landArea'].includes(key)) {
+                    const numValue = Number(value);
+                    if (!isNaN(numValue) && numValue >= 0) {
+                        processedData[key] = numValue;
+                    } else {
+                        processedData[key] = null;
+                    }
+                } else {
+                    processedData[key] = value;
                 }
             });
+
+            // Handle files separately
+            const formDataToSend = new FormData();
+            
+            // Add the processed JSON data
+            formDataToSend.append('data', JSON.stringify(processedData));
 
             // Get the image files from the ImageUpload component
             const imageInput = document.querySelector('input[name="images"]') as HTMLInputElement;
             if (imageInput && imageInput.files) {
                 Array.from(imageInput.files).forEach((file, index) => {
                     formDataToSend.append('images', file);
-                    // Add isMain flag for each image
                     formDataToSend.append('imageMainFlags', index === 0 ? 'true' : 'false');
                 });
             }
@@ -155,17 +320,22 @@ export default function AddProperty(){
                 });
             }
 
-            console.log('Sending form data:', {
-                formFields: Object.fromEntries(formDataToSend.entries()),
-                images: imageInput?.files ? Array.from(imageInput.files).map(f => f.name) : [],
-                files: fileInput?.files ? Array.from(fileInput.files).map(f => f.name) : []
+            // Log the data being sent
+            console.log('Raw form data:', formData);
+            console.log('Processed data before sending:', processedData);
+            console.log('FormData contents:');
+            formDataToSend.forEach((value, key) => {
+                if (key === 'data') {
+                    console.log('data field:', JSON.parse(value as string));
+                } else {
+                    console.log(`${key}:`, value);
+                }
             });
 
             // Send the request
             const response = await fetch(`${API_BASE_URL}/properties`, {
                 method: 'POST',
                 body: formDataToSend,
-                // Remove the Content-Type header to let the browser set it with the boundary
                 headers: {
                     'Accept': 'application/json',
                 },
@@ -196,8 +366,8 @@ export default function AddProperty(){
             setFormData({
                 name: '',
                 categoryId: '',
-                status: 'ACTIVE',
-                ownershipType: 'OWNERSHIP',
+                status: PropertyStatus.ACTIVE,
+                ownershipType: OwnershipType.OWNERSHIP,
                 description: '',
                 city: '',
                 street: '',
@@ -367,27 +537,92 @@ export default function AddProperty(){
 
                                         <div className="col-span-12 md:col-span-4">
                                             <label htmlFor="size" className="font-medium">Size:</label>
-                                            <input name="size" id="size" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2 focus:!border-green-500 focus:ring-2 focus:ring-green-200 dark:focus:ring-green-800 transition-colors duration-200" placeholder="Size" value={formData.size} onChange={handleInputChange}/>
+                                            <input 
+                                                name="size" 
+                                                id="size" 
+                                                type="number" 
+                                                min="0"
+                                                step="1"
+                                                className={`form-input border ${errors.size ? '!border-red-500' : '!border-gray-200 dark:!border-gray-800'} mt-2`}
+                                                placeholder="Size in m²" 
+                                                value={formData.size} 
+                                                onChange={handleInputChange}
+                                            />
+                                            {errors.size && (
+                                                <p className="text-red-500 text-sm mt-1">{errors.size}</p>
+                                            )}
                                         </div>
 
                                         <div className="col-span-12 md:col-span-4">
                                             <label htmlFor="beds" className="font-medium">Beds:</label>
-                                            <input name="beds" id="beds" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2 focus:!border-green-500 focus:ring-2 focus:ring-green-200 dark:focus:ring-green-800 transition-colors duration-200" placeholder="Beds" value={formData.beds} onChange={handleInputChange}/>
+                                            <input 
+                                                name="beds" 
+                                                id="beds" 
+                                                type="number" 
+                                                min="0"
+                                                step="1"
+                                                className={`form-input border ${errors.beds ? '!border-red-500' : '!border-gray-200 dark:!border-gray-800'} mt-2`}
+                                                placeholder="Number of beds" 
+                                                value={formData.beds} 
+                                                onChange={handleInputChange}
+                                            />
+                                            {errors.beds && (
+                                                <p className="text-red-500 text-sm mt-1">{errors.beds}</p>
+                                            )}
                                         </div>
 
                                         <div className="col-span-12 md:col-span-4">
                                             <label htmlFor="baths" className="font-medium">Baths:</label>
-                                            <input name="baths" id="baths" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2 focus:!border-green-500 focus:ring-2 focus:ring-green-200 dark:focus:ring-green-800 transition-colors duration-200" placeholder="Baths" value={formData.baths} onChange={handleInputChange}/>
+                                            <input 
+                                                name="baths" 
+                                                id="baths" 
+                                                type="number" 
+                                                min="0"
+                                                step="1"
+                                                className={`form-input border ${errors.baths ? '!border-red-500' : '!border-gray-200 dark:!border-gray-800'} mt-2`}
+                                                placeholder="Number of baths" 
+                                                value={formData.baths} 
+                                                onChange={handleInputChange}
+                                            />
+                                            {errors.baths && (
+                                                <p className="text-red-500 text-sm mt-1">{errors.baths}</p>
+                                            )}
                                         </div>
 
                                         <div className="col-span-12 md:col-span-6">
                                             <label htmlFor="price" className="font-medium">Price:</label>
-                                            <input name="price" id="price" type="number" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2 focus:!border-green-500 focus:ring-2 focus:ring-green-200 dark:focus:ring-green-800 transition-colors duration-200" placeholder="Price" value={formData.price} onChange={handleInputChange}/>
+                                            <input 
+                                                name="price" 
+                                                id="price" 
+                                                type="number" 
+                                                min="0"
+                                                step="0.01"
+                                                className={`form-input border ${errors.price ? '!border-red-500' : '!border-gray-200 dark:!border-gray-800'} mt-2`}
+                                                placeholder="Price" 
+                                                value={formData.price} 
+                                                onChange={handleInputChange}
+                                            />
+                                            {errors.price && (
+                                                <p className="text-red-500 text-sm mt-1">{errors.price}</p>
+                                            )}
                                         </div>
 
                                         <div className="col-span-12 md:col-span-6">
                                             <label htmlFor="discountedPrice" className="font-medium">Discounted Price:</label>
-                                            <input name="discountedPrice" id="discountedPrice" type="number" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2 focus:!border-green-500 focus:ring-2 focus:ring-green-200 dark:focus:ring-green-800 transition-colors duration-200" placeholder="Discounted Price" value={formData.discountedPrice} onChange={handleInputChange}/>
+                                            <input 
+                                                name="discountedPrice" 
+                                                id="discountedPrice" 
+                                                type="number" 
+                                                min="0"
+                                                step="0.01"
+                                                className={`form-input border ${errors.discountedPrice ? '!border-red-500' : '!border-gray-200 dark:!border-gray-800'} mt-2`}
+                                                placeholder="Discounted Price" 
+                                                value={formData.discountedPrice} 
+                                                onChange={handleInputChange}
+                                            />
+                                            {errors.discountedPrice && (
+                                                <p className="text-red-500 text-sm mt-1">{errors.discountedPrice}</p>
+                                            )}
                                         </div>
 
                                         <div className="col-span-12 md:col-span-4">
@@ -434,7 +669,17 @@ export default function AddProperty(){
                                     <div className="grid grid-cols-12 gap-5">
                                         <div className="col-span-12 md:col-span-6">
                                             <label htmlFor="buildingStoriesNumber" className="font-medium">Building Stories Number:</label>
-                                            <input name="buildingStoriesNumber" id="buildingStoriesNumber" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Building Stories Number" value={formData.buildingStoriesNumber} onChange={handleInputChange}/>
+                                            <input 
+                                                name="buildingStoriesNumber" 
+                                                id="buildingStoriesNumber" 
+                                                type="number" 
+                                                min="0"
+                                                step="1"
+                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
+                                                placeholder="Number of stories" 
+                                                value={formData.buildingStoriesNumber} 
+                                                onChange={handleInputChange}
+                                            />
                                         </div>
 
                                         <div className="col-span-12 md:col-span-6">
@@ -449,27 +694,85 @@ export default function AddProperty(){
 
                                         <div className="col-span-12 md:col-span-6">
                                             <label htmlFor="aboveGroundFloors" className="font-medium">Above Ground Floors:</label>
-                                            <input name="aboveGroundFloors" id="aboveGroundFloors" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Above Ground Floors" value={formData.aboveGroundFloors} onChange={handleInputChange}/>
+                                            <input 
+                                                name="aboveGroundFloors" 
+                                                id="aboveGroundFloors" 
+                                                type="number" 
+                                                min="0"
+                                                step="1"
+                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
+                                                placeholder="Number of above ground floors" 
+                                                value={formData.aboveGroundFloors} 
+                                                onChange={handleInputChange}
+                                            />
                                         </div>
 
                                         <div className="col-span-12 md:col-span-6">
                                             <label htmlFor="reconstructionYearApartment" className="font-medium">Apartment Reconstruction Year:</label>
-                                            <input name="reconstructionYearApartment" id="reconstructionYearApartment" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Apartment Reconstruction Year" value={formData.reconstructionYearApartment} onChange={handleInputChange}/>
+                                            <input 
+                                                name="reconstructionYearApartment" 
+                                                id="reconstructionYearApartment" 
+                                                type="number" 
+                                                min="1800"
+                                                max={currentYear}
+                                                step="1"
+                                                className={`form-input border ${errors.reconstructionYearApartment ? '!border-red-500' : '!border-gray-200 dark:!border-gray-800'} mt-2`}
+                                                placeholder="Year of reconstruction" 
+                                                value={formData.reconstructionYearApartment} 
+                                                onChange={handleInputChange}
+                                            />
+                                            {errors.reconstructionYearApartment && (
+                                                <p className="text-red-500 text-sm mt-1">{errors.reconstructionYearApartment}</p>
+                                            )}
                                         </div>
 
                                         <div className="col-span-12 md:col-span-6">
                                             <label htmlFor="reconstructionYearBuilding" className="font-medium">Building Reconstruction Year:</label>
-                                            <input name="reconstructionYearBuilding" id="reconstructionYearBuilding" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Building Reconstruction Year" value={formData.reconstructionYearBuilding} onChange={handleInputChange}/>
+                                            <input 
+                                                name="reconstructionYearBuilding" 
+                                                id="reconstructionYearBuilding" 
+                                                type="number" 
+                                                min="1800"
+                                                max={currentYear}
+                                                step="1"
+                                                className={`form-input border ${errors.reconstructionYearBuilding ? '!border-red-500' : '!border-gray-200 dark:!border-gray-800'} mt-2`}
+                                                placeholder="Year of reconstruction" 
+                                                value={formData.reconstructionYearBuilding} 
+                                                onChange={handleInputChange}
+                                            />
+                                            {errors.reconstructionYearBuilding && (
+                                                <p className="text-red-500 text-sm mt-1">{errors.reconstructionYearBuilding}</p>
+                                            )}
                                         </div>
 
                                         <div className="col-span-12 md:col-span-6">
                                             <label htmlFor="totalAboveGroundFloors" className="font-medium">Total Above Ground Floors:</label>
-                                            <input name="totalAboveGroundFloors" id="totalAboveGroundFloors" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Total Above Ground Floors" value={formData.totalAboveGroundFloors} onChange={handleInputChange}/>
+                                            <input 
+                                                name="totalAboveGroundFloors" 
+                                                id="totalAboveGroundFloors" 
+                                                type="number" 
+                                                min="0"
+                                                step="1"
+                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
+                                                placeholder="Total number of above ground floors" 
+                                                value={formData.totalAboveGroundFloors} 
+                                                onChange={handleInputChange}
+                                            />
                                         </div>
 
                                         <div className="col-span-12 md:col-span-6">
                                             <label htmlFor="totalUndergroundFloors" className="font-medium">Total Underground Floors:</label>
-                                            <input name="totalUndergroundFloors" id="totalUndergroundFloors" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Total Underground Floors" value={formData.totalUndergroundFloors} onChange={handleInputChange}/>
+                                            <input 
+                                                name="totalUndergroundFloors" 
+                                                id="totalUndergroundFloors" 
+                                                type="number" 
+                                                min="0"
+                                                step="1"
+                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
+                                                placeholder="Total number of underground floors" 
+                                                value={formData.totalUndergroundFloors} 
+                                                onChange={handleInputChange}
+                                            />
                                         </div>
                                     </div>
                                 </div>
@@ -480,72 +783,212 @@ export default function AddProperty(){
                                     <div className="grid grid-cols-12 gap-5">
                                         <div className="col-span-12 md:col-span-6">
                                             <label htmlFor="floorArea" className="font-medium">Floor Area:</label>
-                                            <input name="floorArea" id="floorArea" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Floor Area" value={formData.floorArea} onChange={handleInputChange}/>
+                                            <input 
+                                                name="floorArea" 
+                                                id="floorArea" 
+                                                type="number" 
+                                                min="0"
+                                                step="0.01"
+                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
+                                                placeholder="Floor area in m²" 
+                                                value={formData.floorArea} 
+                                                onChange={handleInputChange}
+                                            />
                                         </div>
 
                                         <div className="col-span-12 md:col-span-6">
                                             <label htmlFor="builtUpArea" className="font-medium">Built Up Area:</label>
-                                            <input name="builtUpArea" id="builtUpArea" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Built Up Area" value={formData.builtUpArea} onChange={handleInputChange}/>
+                                            <input 
+                                                name="builtUpArea" 
+                                                id="builtUpArea" 
+                                                type="number" 
+                                                min="0"
+                                                step="0.01"
+                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
+                                                placeholder="Built up area in m²" 
+                                                value={formData.builtUpArea} 
+                                                onChange={handleInputChange}
+                                            />
                                         </div>
 
                                         <div className="col-span-12 md:col-span-6">
                                             <label htmlFor="gardenHouseArea" className="font-medium">Garden House Area:</label>
-                                            <input name="gardenHouseArea" id="gardenHouseArea" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Garden House Area" value={formData.gardenHouseArea} onChange={handleInputChange}/>
+                                            <input 
+                                                name="gardenHouseArea" 
+                                                id="gardenHouseArea" 
+                                                type="number" 
+                                                min="0"
+                                                step="0.01"
+                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
+                                                placeholder="Garden house area in m²" 
+                                                value={formData.gardenHouseArea} 
+                                                onChange={handleInputChange}
+                                            />
                                         </div>
 
                                         <div className="col-span-12 md:col-span-6">
                                             <label htmlFor="terraceArea" className="font-medium">Terrace Area:</label>
-                                            <input name="terraceArea" id="terraceArea" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Terrace Area" value={formData.terraceArea} onChange={handleInputChange}/>
+                                            <input 
+                                                name="terraceArea" 
+                                                id="terraceArea" 
+                                                type="number" 
+                                                min="0"
+                                                step="0.01"
+                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
+                                                placeholder="Terrace area in m²" 
+                                                value={formData.terraceArea} 
+                                                onChange={handleInputChange}
+                                            />
                                         </div>
 
                                         <div className="col-span-12 md:col-span-6">
                                             <label htmlFor="totalLandArea" className="font-medium">Total Land Area:</label>
-                                            <input name="totalLandArea" id="totalLandArea" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Total Land Area" value={formData.totalLandArea} onChange={handleInputChange}/>
+                                            <input 
+                                                name="totalLandArea" 
+                                                id="totalLandArea" 
+                                                type="number" 
+                                                min="0"
+                                                step="0.01"
+                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
+                                                placeholder="Total land area in m²" 
+                                                value={formData.totalLandArea} 
+                                                onChange={handleInputChange}
+                                            />
                                         </div>
 
                                         <div className="col-span-12 md:col-span-6">
                                             <label htmlFor="gardenArea" className="font-medium">Garden Area:</label>
-                                            <input name="gardenArea" id="gardenArea" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Garden Area" value={formData.gardenArea} onChange={handleInputChange}/>
+                                            <input 
+                                                name="gardenArea" 
+                                                id="gardenArea" 
+                                                type="number" 
+                                                min="0"
+                                                step="0.01"
+                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
+                                                placeholder="Garden area in m²" 
+                                                value={formData.gardenArea} 
+                                                onChange={handleInputChange}
+                                            />
                                         </div>
 
                                         <div className="col-span-12 md:col-span-6">
                                             <label htmlFor="garageArea" className="font-medium">Garage Area:</label>
-                                            <input name="garageArea" id="garageArea" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Garage Area" value={formData.garageArea} onChange={handleInputChange}/>
+                                            <input 
+                                                name="garageArea" 
+                                                id="garageArea" 
+                                                type="number" 
+                                                min="0"
+                                                step="0.01"
+                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
+                                                placeholder="Garage area in m²" 
+                                                value={formData.garageArea} 
+                                                onChange={handleInputChange}
+                                            />
                                         </div>
 
                                         <div className="col-span-12 md:col-span-6">
                                             <label htmlFor="balconyArea" className="font-medium">Balcony Area:</label>
-                                            <input name="balconyArea" id="balconyArea" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Balcony Area" value={formData.balconyArea} onChange={handleInputChange}/>
+                                            <input 
+                                                name="balconyArea" 
+                                                id="balconyArea" 
+                                                type="number" 
+                                                min="0"
+                                                step="0.01"
+                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
+                                                placeholder="Balcony area in m²" 
+                                                value={formData.balconyArea} 
+                                                onChange={handleInputChange}
+                                            />
                                         </div>
 
                                         <div className="col-span-12 md:col-span-6">
                                             <label htmlFor="pergolaArea" className="font-medium">Pergola Area:</label>
-                                            <input name="pergolaArea" id="pergolaArea" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Pergola Area" value={formData.pergolaArea} onChange={handleInputChange}/>
+                                            <input 
+                                                name="pergolaArea" 
+                                                id="pergolaArea" 
+                                                type="number" 
+                                                min="0"
+                                                step="0.01"
+                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
+                                                placeholder="Pergola area in m²" 
+                                                value={formData.pergolaArea} 
+                                                onChange={handleInputChange}
+                                            />
                                         </div>
 
                                         <div className="col-span-12 md:col-span-6">
                                             <label htmlFor="basementArea" className="font-medium">Basement Area:</label>
-                                            <input name="basementArea" id="basementArea" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Basement Area" value={formData.basementArea} onChange={handleInputChange}/>
+                                            <input 
+                                                name="basementArea" 
+                                                id="basementArea" 
+                                                type="number" 
+                                                min="0"
+                                                step="0.01"
+                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
+                                                placeholder="Basement area in m²" 
+                                                value={formData.basementArea} 
+                                                onChange={handleInputChange}
+                                            />
                                         </div>
 
                                         <div className="col-span-12 md:col-span-6">
                                             <label htmlFor="workshopArea" className="font-medium">Workshop Area:</label>
-                                            <input name="workshopArea" id="workshopArea" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Workshop Area" value={formData.workshopArea} onChange={handleInputChange}/>
+                                            <input 
+                                                name="workshopArea" 
+                                                id="workshopArea" 
+                                                type="number" 
+                                                min="0"
+                                                step="0.01"
+                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
+                                                placeholder="Workshop area in m²" 
+                                                value={formData.workshopArea} 
+                                                onChange={handleInputChange}
+                                            />
                                         </div>
 
                                         <div className="col-span-12 md:col-span-6">
                                             <label htmlFor="totalObjectArea" className="font-medium">Total Object Area:</label>
-                                            <input name="totalObjectArea" id="totalObjectArea" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Total Object Area" value={formData.totalObjectArea} onChange={handleInputChange}/>
+                                            <input 
+                                                name="totalObjectArea" 
+                                                id="totalObjectArea" 
+                                                type="number" 
+                                                min="0"
+                                                step="0.01"
+                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
+                                                placeholder="Total object area in m²" 
+                                                value={formData.totalObjectArea} 
+                                                onChange={handleInputChange}
+                                            />
                                         </div>
 
                                         <div className="col-span-12 md:col-span-6">
                                             <label htmlFor="usableArea" className="font-medium">Usable Area:</label>
-                                            <input name="usableArea" id="usableArea" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Usable Area" value={formData.usableArea} onChange={handleInputChange}/>
+                                            <input 
+                                                name="usableArea" 
+                                                id="usableArea" 
+                                                type="number" 
+                                                min="0"
+                                                step="0.01"
+                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
+                                                placeholder="Usable area in m²" 
+                                                value={formData.usableArea} 
+                                                onChange={handleInputChange}
+                                            />
                                         </div>
 
                                         <div className="col-span-12 md:col-span-6">
                                             <label htmlFor="landArea" className="font-medium">Land Area:</label>
-                                            <input name="landArea" id="landArea" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Land Area" value={formData.landArea} onChange={handleInputChange}/>
+                                            <input 
+                                                name="landArea" 
+                                                id="landArea" 
+                                                type="number" 
+                                                min="0"
+                                                step="0.01"
+                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
+                                                placeholder="Land area in m²" 
+                                                value={formData.landArea} 
+                                                onChange={handleInputChange}
+                                            />
                                         </div>
                                     </div>
                                 </div>
