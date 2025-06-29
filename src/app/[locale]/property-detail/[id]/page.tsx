@@ -480,12 +480,12 @@ export default function PropertyDetail() {
                                             </li>
                                             <li key="price" className="flex justify-between items-center">
                                                 <span className="font-medium">{t('fields.price')}:</span>
-                                                <span className="text-right">${formatValue(property.price)}</span>
+                                                <span className="text-right">{formatValue(property.price)} Kč</span>
                                             </li>
                                             {property.discountedPrice && (
                                                 <li key="discountedPrice" className="flex justify-between items-center">
                                                     <span className="font-medium">{t('fields.discountedPrice')}:</span>
-                                                    <span className="text-right">${formatValue(property.discountedPrice)}</span>
+                                                    <span className="text-right">{formatValue(property.discountedPrice)} Kč</span>
                                                 </li>
                                             )}
                                         </ul>
