@@ -7,6 +7,34 @@ export const API_ENDPOINTS = {
         delete: (locale: string, id: number) => `/${locale}/properties/${id}`,
         updateState: (locale: string, id: number) => `/${locale}/properties/${id}/state`,
         top: (locale: string, limit: number) => `/${locale}/properties?limit=${limit}&sort=rating`,
+        stats: () => '/properties/stats',
+        categoryStats: () => '/properties/category-stats',
+        videoTours: () => '/properties/video-tours',
+        createExternal: () => '/properties/external',
+        sync: (id: number) => `/properties/${id}/sync`,
+        translate: (id: number) => `/properties/${id}/translate`,
+    },
+    reviews: {
+        list: () => '/reviews',
+        create: () => '/reviews',
+    },
+    blogs: {
+        list: () => '/blogs',
+        detail: (slug: string) => `/blogs/${slug}`,
+        translate: (id: number) => `/blogs/${id}/translate`,
+    },
+    contactform: {
+        submit: () => '/contactform',
+        list: () => '/contactform',
+    },
+    upload: {
+        singleImage: () => '/upload/image',
+        multipleImages: () => '/upload/images',
+        singleFile: () => '/upload/file',
+        multipleFiles: () => '/upload/files',
+    },
+    health: {
+        check: () => '/health',
     },
 } as const;
 
@@ -18,6 +46,8 @@ export type EndpointParams = {
             page?: number;
             limit?: number;
             search?: string;
+            status?: 'ACTIVE' | 'SOLD' | 'RENT';
+            categoryId?: number;
         };
         detail: {
             locale: string;
@@ -35,11 +65,51 @@ export type EndpointParams = {
         updateState: {
             locale: string;
             id: number;
-            status: 'ACTIVE' | 'SOLD';
+            status: 'ACTIVE' | 'SOLD' | 'RENT';
         };
         top: {
             locale: string;
             limit: number;
+        };
+        sync: {
+            id: number;
+        };
+        translate: {
+            id: number;
+            targetLanguage: string;
+            sourceLanguage?: string;
+        };
+    };
+    reviews: {
+        create: {
+            name: string;
+            description: string;
+            rating: number;
+            propertyId?: number;
+        };
+    };
+    blogs: {
+        list: {
+            page?: number;
+            limit?: number;
+            truncate?: number;
+        };
+        detail: {
+            slug: string;
+        };
+        translate: {
+            id: number;
+            targetLanguage: string;
+            sourceLanguage?: string;
+        };
+    };
+    contactform: {
+        submit: {
+            name: string;
+            email: string;
+            subject: string;
+            message: string;
+            phoneNumber?: string;
         };
     };
 }; 

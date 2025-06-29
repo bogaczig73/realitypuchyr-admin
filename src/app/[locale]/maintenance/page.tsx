@@ -1,9 +1,9 @@
 import React from "react";
 import Image from "next/image";
 
-import CountDownTwo from "@/components/countDownTwo";
-import Switcher from "@/components/switcher";
-import BackToHome from "@/components/backToHome";
+import CountDownTwo from "@/app/[locale]/components/countDownTwo";
+import Switcher from "@/app/[locale]/components/switcher";
+import BackToHome from "@/app/[locale]/components/backToHome";
 
 export default function Maintenance(){
     return(

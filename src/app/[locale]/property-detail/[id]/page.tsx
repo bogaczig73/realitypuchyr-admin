@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import Wrapper from "@/components/wrapper";
+import Wrapper from "@/app/[locale]/components/wrapper";
 import { useParams, useRouter } from "next/navigation";
 import { propertyService } from "@/api/services/property";
 import { Property } from "@/types/property";

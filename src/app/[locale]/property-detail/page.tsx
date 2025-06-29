@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
-import Wrapper from "@/components/wrapper";
-import PropertyImage from "@/components/propertyImage";
+import Wrapper from "@/app/[locale]/components/wrapper";
+import PropertyImage from "@/app/[locale]/components/propertyImage";
 
 export default function PropertyDetail(){
     return(

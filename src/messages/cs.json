@@ -16,6 +16,26 @@
       "subtitle": "Objevte perfektní nemovitost, která odpovídá vašemu životnímu stylu"
     }
   },
+  "blog": {
+    "title": "Blogy",
+    "readMore": "Číst více",
+    "backToBlogs": "Zpět na blogy",
+    "blogNotFound": "Blog nebyl nalezen",
+    "failedToLoad": "Nepodařilo se načíst blogy. Zkuste to prosím později.",
+    "failedToLoadDetails": "Nepodařilo se načíst detaily blogu. Zkuste to prosím později.",
+    "tryAgain": "Zkusit znovu",
+    "loading": "Načítání...",
+    "noBlogs": "Žádné blogy nebyly nalezeny",
+    "searchBlogs": "Hledat blogy",
+    "recentPosts": "Poslední příspěvky",
+    "leaveComment": "Zanechat komentář:",
+    "yourName": "Vaše jméno:",
+    "yourEmail": "Váš email:",
+    "yourComment": "Váš komentář:",
+    "sendMessage": "Odeslat zprávu",
+    "socialSites": "Sociální sítě",
+    "searchProperties": "Hledat nemovitosti"
+  },
   "properties": {
     "title": "Naše nemovitosti",
     "filter": "Filtrovat nemovitosti",

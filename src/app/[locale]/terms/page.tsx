@@ -1,8 +1,8 @@
 import React from "react";
 import Link from "next/link";
 
-import Wrapper from "@/components/wrapper";
-import Accordian from "@/components/accordian";
+import Wrapper from "@/app/[locale]/components/wrapper";
+import Accordian from "@/app/[locale]/components/accordian";
 
 export default function Terms(){
     return(

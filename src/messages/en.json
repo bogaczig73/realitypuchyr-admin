@@ -16,6 +16,26 @@
       "subtitle": "Discover the perfect property that matches your lifestyle"
     }
   },
+  "blog": {
+    "title": "Blogs",
+    "readMore": "Read More",
+    "backToBlogs": "Back to Blogs",
+    "blogNotFound": "Blog not found",
+    "failedToLoad": "Failed to load blogs. Please try again later.",
+    "failedToLoadDetails": "Failed to load blog details. Please try again later.",
+    "tryAgain": "Try Again",
+    "loading": "Loading...",
+    "noBlogs": "No blogs found",
+    "searchBlogs": "Search Blogs",
+    "recentPosts": "Recent Posts",
+    "leaveComment": "Leave A Comment:",
+    "yourName": "Your Name:",
+    "yourEmail": "Your Email:",
+    "yourComment": "Your Comment:",
+    "sendMessage": "Send Message",
+    "socialSites": "Social sites",
+    "searchProperties": "Search Properties"
+  },
   "properties": {
     "title": "Our Properties",
     "filter": "Filter Properties",

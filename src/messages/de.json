@@ -16,6 +16,26 @@
       "subtitle": "Entdecken Sie die perfekte Immobilie, die zu Ihrem Lebensstil passt"
     }
   },
+  "blog": {
+    "title": "Blogs",
+    "readMore": "Weiterlesen",
+    "backToBlogs": "Zurück zu Blogs",
+    "blogNotFound": "Blog nicht gefunden",
+    "failedToLoad": "Blogs konnten nicht geladen werden. Bitte versuchen Sie es später erneut.",
+    "failedToLoadDetails": "Blog-Details konnten nicht geladen werden. Bitte versuchen Sie es später erneut.",
+    "tryAgain": "Erneut versuchen",
+    "loading": "Laden...",
+    "noBlogs": "Keine Blogs gefunden",
+    "searchBlogs": "Blogs durchsuchen",
+    "recentPosts": "Neueste Beiträge",
+    "leaveComment": "Kommentar hinterlassen:",
+    "yourName": "Ihr Name:",
+    "yourEmail": "Ihre E-Mail:",
+    "yourComment": "Ihr Kommentar:",
+    "sendMessage": "Nachricht senden",
+    "socialSites": "Soziale Netzwerke",
+    "searchProperties": "Immobilien suchen"
+  },
   "properties": {
     "title": "Unsere Immobilien",
     "filter": "Immobilien filtern",

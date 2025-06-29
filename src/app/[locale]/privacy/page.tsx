@@ -1,8 +1,8 @@
 import React from "react";
 import Link from "next/link";
 
-import Wrapper from "@/components/wrapper";
-import Print from "@/components/print";
+import Wrapper from "@/app/[locale]/components/wrapper";
+import Print from "@/app/[locale]/components/print";
 
 export default function Privacy(){
     return(

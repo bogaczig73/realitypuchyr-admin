@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 
-import Wrapper from "@/components/wrapper";
+import Wrapper from "@/app/[locale]/components/wrapper";
 
 
 import { recentPost } from "../../data/data";

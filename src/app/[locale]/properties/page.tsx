@@ -2,7 +2,7 @@
 import React, { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import Wrapper from "@/components/wrapper";
+import Wrapper from "@/app/[locale]/components/wrapper";
 import { Property, Pagination } from "@/types/property";
 import { propertyService } from "@/api/services/property";
 import { useSearchParams, useParams } from 'next/navigation';
@@ -150,7 +150,7 @@ function ExplorePropertyContent() {
                                                 <div className="absolute inset-0 bg-gray-200 animate-pulse"></div>
                                             )}
                                             <Image 
-                                                src={item.images[0]?.url || '/images/placeholder-image.jpg'} 
+                                                src={item.images[0]?.url || '/images/placeholder.webp'} 
                                                 width={0} 
                                                 height={0} 
                                                 sizes="100vw" 

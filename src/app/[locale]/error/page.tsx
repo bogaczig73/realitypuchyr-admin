@@ -2,8 +2,8 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 
-import BackToHome from "@/components/backToHome";
-import Switcher from "@/components/switcher";
+import BackToHome from "@/app/[locale]/components/backToHome";
+import Switcher from "@/app/[locale]/components/switcher";
 
 export default function Error(){
     return(

@@ -2,7 +2,7 @@
 import React,{useState} from "react"
 import Link from "next/link"
 
-import Wrapper from "@/components/wrapper"
+import Wrapper from "@/app/[locale]/components/wrapper"
 
 import { accordianData } from "../../data/data";
 import { FiChevronDown, FiPlus } from "react-icons/fi";

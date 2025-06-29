@@ -1,8 +1,8 @@
 import React from "react";
 import Link from "next/link";
 
-import Switcher from "@/components/switcher";
-import BackToHome from "@/components/backToHome";
+import Switcher from "@/app/[locale]/components/switcher";
+import BackToHome from "@/app/[locale]/components/backToHome";
 
 export default function SignUpSucess(){
     return(

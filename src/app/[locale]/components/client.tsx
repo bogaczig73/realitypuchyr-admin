@@ -3,16 +3,8 @@ import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import Masonry, {ResponsiveMasonry} from "react-responsive-masonry"
-
-interface Review {
-    id: number;
-    name: string;
-    description: string;
-    rating: number;
-    createdAt: string;
-}
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import { reviewService } from '@/api/services/reviews'
+import { Review } from '@/types/property'
 
 export default function Client() {
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -22,17 +14,7 @@ export default function Client() {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const response = await fetch(`${API_URL}/reviews`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        
-        // Ensure data is an array
-        if (!Array.isArray(data)) {
-          throw new Error('Received data is not an array');
-        }
-        
+        const data = await reviewService.getReviews();
         setReviews(data);
         setError(null);
       } catch (error) {

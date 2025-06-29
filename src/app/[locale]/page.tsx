@@ -5,10 +5,10 @@ import Link from 'next/link'
 import dynamic from "next/dynamic";
 import { useTranslations } from 'next-intl';
 
-import Wrapper from '@/components/wrapper'
-import Counter from '@/components/counter'
-import Charts from '@/components/charts'
-import ScrollBar from '@/components/scrollbar'
+import Wrapper from '@/app/[locale]/components/wrapper'
+import Counter from '@/app/[locale]/components/counter'
+import Charts from '@/app/[locale]/components/charts'
+import ScrollBar from '@/app/[locale]/components/scrollbar'
 
 import { counterData, salesData, recentTransection, topProperties } from '@/app/data/data'
 interface CounterData{
@@ -39,7 +39,7 @@ interface TopProperties{
     status: string;
 }
 
-const MapVactor = dynamic(()=>import('@/components/mapVactor'),{ssr:false})
+const MapVactor = dynamic(()=>import('@/app/[locale]/components/mapVactor'),{ssr:false})
 
 export default function Home() {
     const t = useTranslations('common');

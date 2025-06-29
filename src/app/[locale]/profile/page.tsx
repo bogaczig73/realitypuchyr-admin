@@ -2,8 +2,8 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 
-import Wrapper from "@/components/wrapper";
-import UplodProfileImg from "@/components/uplodProfileImg";
+import Wrapper from "@/app/[locale]/components/wrapper";
+import UplodProfileImg from "@/app/[locale]/components/uplodProfileImg";
 
 import { propertiesData } from "../../data/data";
 import { FiBookmark, FiGift, FiGlobe, FiItalic, FiMail, FiMapPin, FiPhone } from "react-icons/fi";

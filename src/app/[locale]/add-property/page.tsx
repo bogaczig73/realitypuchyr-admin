@@ -4,9 +4,9 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { PropertyStatus, OwnershipType } from "@/types/property";
 
-import Wrapper from "@/components/wrapper";
-import ImageUpload from "@/components/imageUpload";
-import FileUpload from "@/components/FileUpload";
+import Wrapper from "@/app/[locale]/components/wrapper";
+import ImageUpload from "@/app/[locale]/components/imageUpload";
+import FileUpload from "@/app/[locale]/components/FileUpload";
 
 interface Category {
     id: number;
@@ -75,6 +75,7 @@ interface FormData {
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
 
 export default function AddProperty(){
     const [categories, setCategories] = useState<Category[]>([]);
@@ -146,13 +147,23 @@ export default function AddProperty(){
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitSuccess, setSubmitSuccess] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
     const currentYear = new Date().getFullYear();
 
     useEffect(() => {
         // Fetch categories when component mounts
         const fetchCategories = async () => {
             try {
-                const response = await fetch(`${API_BASE_URL}/categories`);
+                const headers: Record<string, string> = {};
+                
+                // Add API key if available
+                if (API_KEY) {
+                    headers['X-API-Key'] = API_KEY;
+                }
+                
+                const response = await fetch(`${API_BASE_URL}/categories`, { headers });
                 if (!response.ok) {
                     throw new Error('Failed to fetch categories');
                 }
@@ -254,6 +265,9 @@ export default function AddProperty(){
         }
         
         try {
+            setIsSubmitting(true);
+            setSubmitError(null);
+            
             // Convert form data to proper types
             const processedData: Record<string, any> = {};
             
@@ -332,13 +346,21 @@ export default function AddProperty(){
                 }
             });
 
+            // Prepare headers
+            const headers: Record<string, string> = {
+                'Accept': 'application/json',
+            };
+            
+            // Add API key if available
+            if (API_KEY) {
+                headers['X-API-Key'] = API_KEY;
+            }
+
             // Send the request
             const response = await fetch(`${API_BASE_URL}/properties`, {
                 method: 'POST',
                 body: formDataToSend,
-                headers: {
-                    'Accept': 'application/json',
-                },
+                headers,
             });
 
             if (!response.ok) {
@@ -347,25 +369,21 @@ export default function AddProperty(){
                     const errorData = await response.json();
                     if (errorData.details) {
                         throw new Error(`Validation failed:\n${errorData.details.join('\n')}`);
+                    } else if (errorData.error) {
+                        throw new Error(errorData.error);
                     }
-                    throw new Error(errorData.error || 'Failed to create property');
-                } else {
-                    const text = await response.text();
-                    console.error('Server response:', text);
-                    throw new Error('Server returned an invalid response');
                 }
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
 
             const result = await response.json();
             console.log('Property created successfully:', result);
-            
-            // Show success message
-            alert('Property created successfully!');
+            setSubmitSuccess(true);
             
             // Reset form
             setFormData({
                 name: '',
-                categoryId: '',
+                categoryId: categories.length > 0 ? categories[0].id.toString() : '',
                 status: PropertyStatus.ACTIVE,
                 ownershipType: OwnershipType.OWNERSHIP,
                 description: '',
@@ -381,6 +399,7 @@ export default function AddProperty(){
                 baths: '',
                 price: '',
                 discountedPrice: '',
+                layout: '',
                 buildingStoriesNumber: '',
                 buildingCondition: '',
                 apartmentCondition: '',
@@ -417,22 +436,15 @@ export default function AddProperty(){
                 utilitiesOnAdjacentRoad: '',
                 payments: '',
                 brokerId: '',
-                secondaryAgent: '',
-                layout: ''
+                secondaryAgent: ''
             });
-
-            // Reset file input
-            if (imageInput) {
-                imageInput.value = '';
-            }
-            if (fileInput) {
-                fileInput.value = '';
-            }
-
+            setErrors({});
             
-        } catch (error: any) {
+        } catch (error) {
             console.error('Error creating property:', error);
-            alert(error.message);
+            setSubmitError(error instanceof Error ? error.message : 'An error occurred while creating the property');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 

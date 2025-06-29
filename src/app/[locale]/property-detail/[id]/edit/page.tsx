@@ -1,10 +1,10 @@
 'use client'
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { propertyApi } from "@/services/api";
+import { propertyService } from "@/api";
 import { Property } from "@/types/property";
 import { useTranslations } from 'next-intl';
-import Wrapper from "@/components/wrapper";
+import Wrapper from "@/app/[locale]/components/wrapper";
 
 export default function EditProperty() {
     const params = useParams();
@@ -20,7 +20,7 @@ export default function EditProperty() {
         const fetchProperty = async () => {
             try {
                 setLoading(true);
-                const data = await propertyApi.getById(id);
+                const data = await propertyService.getPropertyById(id, 'en');
                 setProperty(data);
                 setError(null);
             } catch (err) {
@@ -56,7 +56,7 @@ export default function EditProperty() {
                 // Add other fields as needed
             };
 
-            await propertyApi.update(id, updatedProperty);
+            await propertyService.updateProperty(id, updatedProperty, 'en');
             router.push(`/property-detail/${id}`);
         } catch (err) {
             console.error('Error updating property:', err);
