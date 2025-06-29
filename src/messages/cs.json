@@ -34,7 +34,29 @@
     "yourComment": "Váš komentář:",
     "sendMessage": "Odeslat zprávu",
     "socialSites": "Sociální sítě",
-    "searchProperties": "Hledat nemovitosti"
+    "searchProperties": "Hledat nemovitosti",
+    "edit": "Upravit",
+    "delete": "Smazat",
+    "translations": "Překlady",
+    "availableLanguages": "Dostupné jazyky",
+    "missingLanguages": "Chybějící jazyky",
+    "translateTo": "Přeložit do",
+    "translate": "Přeložit",
+    "translating": "Překládání...",
+    "translationSuccess": "Překlad byl úspěšně vytvořen",
+    "translationError": "Nepodařilo se vytvořit překlad",
+    "noTranslations": "Žádné překlady nejsou k dispozici",
+    "languages": {
+      "cs": "Čeština",
+      "en": "Angličtina",
+      "de": "Němčina",
+      "ru": "Ruština",
+      "ua": "Ukrajinština",
+      "vn": "Vietnamština",
+      "es": "Španělština",
+      "fr": "Francouzština",
+      "it": "Italština"
+    }
   },
   "properties": {
     "title": "Naše nemovitosti",

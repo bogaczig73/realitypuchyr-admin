@@ -34,7 +34,29 @@
     "yourComment": "Ihr Kommentar:",
     "sendMessage": "Nachricht senden",
     "socialSites": "Soziale Netzwerke",
-    "searchProperties": "Immobilien suchen"
+    "searchProperties": "Immobilien suchen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "translations": "Übersetzungen",
+    "availableLanguages": "Verfügbare Sprachen",
+    "missingLanguages": "Fehlende Sprachen",
+    "translateTo": "Übersetzen in",
+    "translate": "Übersetzen",
+    "translating": "Übersetzen...",
+    "translationSuccess": "Übersetzung erfolgreich erstellt",
+    "translationError": "Übersetzung konnte nicht erstellt werden",
+    "noTranslations": "Keine Übersetzungen verfügbar",
+    "languages": {
+      "cs": "Tschechisch",
+      "en": "Englisch",
+      "de": "Deutsch",
+      "ru": "Russisch",
+      "ua": "Ukrainisch",
+      "vn": "Vietnamesisch",
+      "es": "Spanisch",
+      "fr": "Französisch",
+      "it": "Italienisch"
+    }
   },
   "properties": {
     "title": "Unsere Immobilien",

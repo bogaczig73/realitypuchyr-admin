@@ -34,7 +34,29 @@
     "yourComment": "Your Comment:",
     "sendMessage": "Send Message",
     "socialSites": "Social sites",
-    "searchProperties": "Search Properties"
+    "searchProperties": "Search Properties",
+    "edit": "Edit",
+    "delete": "Delete",
+    "translations": "Translations",
+    "availableLanguages": "Available Languages",
+    "missingLanguages": "Missing Languages",
+    "translateTo": "Translate to",
+    "translate": "Translate",
+    "translating": "Translating...",
+    "translationSuccess": "Translation created successfully",
+    "translationError": "Failed to create translation",
+    "noTranslations": "No translations available",
+    "languages": {
+      "cs": "Czech",
+      "en": "English",
+      "de": "German",
+      "ru": "Russian",
+      "ua": "Ukrainian",
+      "vn": "Vietnamese",
+      "es": "Spanish",
+      "fr": "French",
+      "it": "Italian"
+    }
   },
   "properties": {
     "title": "Our Properties",

@@ -19,9 +19,11 @@ export const API_ENDPOINTS = {
         create: () => '/reviews',
     },
     blogs: {
-        list: () => '/blogs',
-        detail: (slug: string) => `/blogs/${slug}`,
-        translate: (id: number) => `/blogs/${id}/translate`,
+        list: (locale: string) => `/${locale}/blogs`,
+        detail: (locale: string, slug: string) => `/${locale}/blogs/${slug}`,
+        detailByLanguage: (locale: string, slug: string, language: string) => `/${locale}/blogs/${slug}?language=${language}`,
+        translate: (locale: string, id: number) => `/${locale}/blogs/${id}/translate`,
+        languages: (locale: string, id: number) => `/${locale}/blogs/${id}/languages`,
     },
     contactform: {
         submit: () => '/contactform',
@@ -90,17 +92,29 @@ export type EndpointParams = {
     };
     blogs: {
         list: {
+            locale: string;
             page?: number;
             limit?: number;
             truncate?: number;
         };
         detail: {
+            locale: string;
             slug: string;
         };
+        detailByLanguage: {
+            locale: string;
+            slug: string;
+            language: string;
+        };
         translate: {
+            locale: string;
             id: number;
             targetLanguage: string;
             sourceLanguage?: string;
+        };
+        languages: {
+            locale: string;
+            id: number;
         };
     };
     contactform: {

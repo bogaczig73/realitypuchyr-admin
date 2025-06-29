@@ -16,6 +16,7 @@ export default function Blog(){
     const params = useParams();
     const searchParams = useSearchParams();
     const t = useTranslations('blog');
+    const locale = String(params?.locale || 'en');
     
     const [blogs, setBlogs] = useState<Blog[]>([]);
     const [pagination, setPagination] = useState({
@@ -36,7 +37,7 @@ export default function Blog(){
             console.log('Fetching blogs for page:', page);
             console.log('API base URL:', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api');
             console.log('Blog endpoint:', '/blogs');
-            const response: any = await blogService.getBlogs(page, 12);
+            const response: any = await blogService.getBlogs(locale, page, 12);
             console.log('Full API Response:', JSON.stringify(response, null, 2));
             console.log('Response type:', typeof response);
             

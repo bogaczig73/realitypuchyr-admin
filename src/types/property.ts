@@ -66,6 +66,30 @@ export interface Blog {
     language: string;
     createdAt: string;
     updatedAt: string;
+    translations?: BlogTranslation[];
+}
+
+export interface BlogTranslation {
+    id: number;
+    blogId: number;
+    language: string;
+    name: string;
+    slug: string;
+    content: string;
+    tags: string[];
+    metaTitle?: string;
+    metaDescription?: string;
+    keywords?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface BlogLanguagesResponse {
+    blogId: number;
+    blogName: string;
+    languages: string[];
+    originalLanguage: string;
+    translatedLanguages: string[];
 }
 
 export interface BlogResponse {
