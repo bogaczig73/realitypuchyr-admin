@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useParams, useSearchParams } from "next/navigation";
@@ -12,7 +12,8 @@ import { ApiError } from "@/api/errors";
 import Wrapper from "@/app/[locale]/components/wrapper";
 import AddBlog from "@/app/[locale]/components/addBlog";
 
-export default function Blog(){
+// Separate component that uses useSearchParams
+function BlogContent() {
     const params = useParams();
     const searchParams = useSearchParams();
     const t = useTranslations('blog');
@@ -365,5 +366,13 @@ export default function Blog(){
                 </div>
             </div>
         </Wrapper>
+    )
+}
+
+export default function Blog(){
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <BlogContent/>
+        </Suspense>
     )
 }

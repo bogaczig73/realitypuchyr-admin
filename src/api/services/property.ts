@@ -120,6 +120,13 @@ export class PropertyService extends BaseService {
     async translateProperty(id: number, data: TranslationRequest): Promise<TranslationResponse> {
         return this.post<TranslationResponse>(API_ENDPOINTS.properties.translate(id), data);
     }
+
+    /**
+     * Get available languages for a property
+     */
+    async getPropertyLanguages(id: number): Promise<{ originalLanguage: string; availableLanguages: string[] }> {
+        return this.get<{ originalLanguage: string; availableLanguages: string[] }>(API_ENDPOINTS.properties.languages(id));
+    }
 }
 
 // Export singleton instance

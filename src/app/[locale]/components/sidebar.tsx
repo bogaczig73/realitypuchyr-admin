@@ -40,37 +40,11 @@ export default function Sidebar(){
                         <li className={`${manu === `/${locale}/add-property` ? 'active' : ''} ms-0`}>
                             <Link href={`/${locale}/add-property`}><i className="mdi mdi-home-plus me-2"></i>{t('addProperties')}</Link>
                         </li>
-
-                        <li className={`sidebar-dropdown ms-0 ${[`/${locale}/profile`, `/${locale}/profile-setting`, `/${locale}/user-item`].includes(manu) ? 'active' : ''}`}>
-                            <Link href="#" onClick={()=>{setSubManu(submanu === `/${locale}/user-item` ? '' : `/${locale}/user-item`)}}><i className="mdi mdi-account-edit me-2"></i>{t('userProfile')}</Link>
-                            <div className={`sidebar-submenu ${[`/${locale}/profile`, `/${locale}/profile-setting`, `/${locale}/user-item`].includes(submanu) ? 'block' : ''}`}>
-                                <ul>
-                                    <li className={`${manu === `/${locale}/profile` ? 'active' : ''} ms-0`}><Link href={`/${locale}/profile`}>{t('profile')}</Link></li>
-                                    <li className={`${manu === `/${locale}/profile-setting` ? 'active' : ''} ms-0`}><Link href={`/${locale}/profile-setting`}>{t('profileSettings')}</Link></li>
-                                </ul>
-                            </div>  
+                        <li className={`${manu === `/${locale}/blog` ? 'active' : ''} ms-0`}>
+                            <Link href={`/${locale}/blog`}><i className="mdi mdi-post me-2"></i>{t('blog')}</Link>
                         </li>
-
-                        <li className={`sidebar-dropdown ms-0 ${["/blog", "/blog-detail"].includes(manu) ? 'active' : ''}`}>
-                            <Link href="#" onClick={() =>{setSubManu(submanu === '/blog-item' ? '' : '/blog-item')}}><i className="mdi mdi-post-outline me-2"></i>Blog</Link>
-                            <div className={`sidebar-submenu ${["/blog", "/blog-detail", '/blog-item'].includes(submanu) ? 'block' : '' }`}>
-                                <ul>
-                                    <li className={`${manu === "/blog" ? 'active' : '' } ms-0`}><Link href="/blog">Blogs</Link></li>
-                                    <li className={`${manu === "/blog-detail" ? 'active' : ''} ms-0`}><Link href="/blog-detail">Blog Detail</Link></li>
-                                </ul>
-                            </div>
-                        </li>
-
-                        <li className={`sidebar-dropdown ms-0 ${["/starter", "/faqs", "/pricing", "/review","/privacy", "/terms"].includes(manu) ? 'active' : ''}`}>
-                            <Link href="#" onClick={() =>setSubManu(submanu === "/page-item" ? "" : "/page-item")}><i className="mdi mdi-file-document-outline me-2"></i>Pages</Link>
-                            <div className={`sidebar-submenu ${["/starter", "/faqs", "/pricing", "/review","/privacy", "/terms", "/page-item"].includes(submanu) ? 'block' : ''}`}>
-                                <ul>
-                                    <li className={`${manu === "/faqs" ? 'active' : ''} ms-0`}><Link href="/faqs">FAQs</Link></li>
-                                    <li className={`${manu === "/review" ? 'active' : ''} ms-0`}><Link href="/review">Review</Link></li>
-                                    <li className={`${manu === "/privacy" ? 'active' : ''} ms-0`}><Link href="/privacy">Privacy Policy</Link></li>
-                                    <li className={`${manu === "/terms" ? 'active' : ''} ms-0`}><Link href="/terms">Term & Condition</Link></li>
-                                </ul>
-                            </div>
+                        <li className={`${manu === `/${locale}/review` ? 'active' : ''} ms-0`}>
+                            <Link href={`/${locale}/review`}><i className="mdi mdi-star me-2"></i>{t('review')}</Link>
                         </li>
 
                         <li className={`sidebar-dropdown ms-0 ${["/login", "/signup", "/signup-success", "/reset-password", "/lock-screen"].includes(manu) ? 'active' : ''}`}>
@@ -91,6 +65,8 @@ export default function Sidebar(){
                                 <ul>
                                     <li className={`${manu === "/maintenance" ? 'active' : ''} ms-0`}><Link href="/maintenance">Maintenance</Link></li>
                                     <li className={`${manu === "/error" ? 'active' : ''} ms-0`}><Link href="/error">Error</Link></li>
+                                    <li className={`${manu === "/privacy" ? 'active' : ''} ms-0`}><Link href="/privacy">Privacy Policy</Link></li>
+                                    <li className={`${manu === "/terms" ? 'active' : ''} ms-0`}><Link href="/terms">Term & Condition</Link></li>
                                 </ul>
                             </div>
                         </li>

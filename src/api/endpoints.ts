@@ -13,10 +13,13 @@ export const API_ENDPOINTS = {
         createExternal: () => '/properties/external',
         sync: (id: number) => `/properties/${id}/sync`,
         translate: (id: number) => `/properties/${id}/translate`,
+        languages: (id: number) => `/properties/${id}/languages`,
     },
     reviews: {
         list: () => '/reviews',
         create: () => '/reviews',
+        update: (id: number) => `/reviews/${id}`,
+        delete: (id: number) => `/reviews/${id}`,
     },
     blogs: {
         list: (locale: string) => `/${locale}/blogs`,
@@ -81,6 +84,9 @@ export type EndpointParams = {
             targetLanguage: string;
             sourceLanguage?: string;
         };
+        languages: {
+            id: number;
+        };
     };
     reviews: {
         create: {
@@ -88,6 +94,18 @@ export type EndpointParams = {
             description: string;
             rating: number;
             propertyId?: number;
+        };
+        update: {
+            id: number;
+            data: {
+                name: string;
+                description: string;
+                rating: number;
+                propertyId?: number;
+            };
+        };
+        delete: {
+            id: number;
         };
     };
     blogs: {

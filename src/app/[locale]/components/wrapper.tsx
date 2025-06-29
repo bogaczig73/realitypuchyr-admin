@@ -13,7 +13,6 @@ export default function Wrapper(props: { children: string | number | bigint | bo
             <main className="page-content bg-gray-50 dark:bg-slate-800">
                 <TopHeader toggle={toggle} setToggle={setToggle} />
                    {props.children}
-                <Footer/>
                 <Switcher/>
             </main>
         </div>

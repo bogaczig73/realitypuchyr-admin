@@ -21,6 +21,20 @@ export class ReviewService extends BaseService {
     async createReview(data: CreateReviewRequest): Promise<Review> {
         return this.post<Review>(API_ENDPOINTS.reviews.create(), data);
     }
+
+    /**
+     * Update an existing review
+     */
+    async updateReview(id: number, data: CreateReviewRequest): Promise<Review> {
+        return this.put<Review>(API_ENDPOINTS.reviews.update(id), data);
+    }
+
+    /**
+     * Delete a review
+     */
+    async deleteReview(id: number): Promise<void> {
+        return this.delete(API_ENDPOINTS.reviews.delete(id));
+    }
 }
 
 // Export singleton instance
