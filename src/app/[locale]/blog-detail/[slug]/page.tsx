@@ -9,20 +9,9 @@ import Wrapper from "@/app/[locale]/components/wrapper";
 import { blogService } from "@/api/services/blogs";
 import type { Blog, BlogTranslation } from "@/types/property";
 import { ApiError } from "@/api/errors";
+import { SUPPORTED_LANGUAGES } from '../../components/supportedLanguages';
 
 import { FiFacebook, FiGithub, FiGitlab, FiInstagram, FiLinkedin, FiMail, FiMessageCircle, FiTwitter, FiUser, FiYoutube, FiEdit, FiTrash2, FiGlobe } from "react-icons/fi";
-
-const SUPPORTED_LANGUAGES = [
-    { code: 'cs', name: 'Czech', flag: '🇨🇿' },
-    { code: 'en', name: 'English', flag: '🇺🇸' },
-    { code: 'de', name: 'German', flag: '🇩🇪' },
-    { code: 'ru', name: 'Russian', flag: '🇷🇺' },
-    { code: 'uk', name: 'Ukrainian', flag: '🇺🇦' },
-    { code: 'vn', name: 'Vietnamese', flag: '🇻🇳' },
-    { code: 'es', name: 'Spanish', flag: '🇪🇸' },
-    { code: 'fr', name: 'French', flag: '🇫🇷' },
-    { code: 'it', name: 'Italian', flag: '🇮🇹' }
-];
 
 export default function BlogDetail(){
     const params = useParams(); 

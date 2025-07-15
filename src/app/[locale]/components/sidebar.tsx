@@ -47,6 +47,10 @@ export default function Sidebar(){
                             <Link href={`/${locale}/review`}><i className="mdi mdi-star me-2"></i>{t('review')}</Link>
                         </li>
 
+                        <li className={`${manu === `/${locale}/languages` ? 'active' : ''} ms-0`}>
+                            <Link href={`/${locale}/languages`}><i className="mdi mdi-translate me-2"></i>{t('languages') || 'Languages'}</Link>
+                        </li>
+
                         <li className={`sidebar-dropdown ms-0 ${["/login", "/signup", "/signup-success", "/reset-password", "/lock-screen"].includes(manu) ? 'active' : ''}`}>
                             <Link href="#" onClick={()=>{setSubManu(submanu === "/auth-item" ? '' : "/auth-item")}}><i className="mdi mdi-login me-2"></i>Authentication</Link>
                             <div className={`sidebar-submenu ${["/login", "/signup", "/signup-success", "/reset-password", "/lock-screen", "/auth-item"].includes(submanu) ? 'block' : ''}`}>

@@ -1,0 +1,43 @@
+// Centralized supported languages config for translation and UI selectors
+export const SUPPORTED_LANGUAGES = [
+    { code: 'ar', name: 'Arabic', flag: '🇸🇦' },
+    { code: 'bg', name: 'Bulgarian', flag: '🇧🇬' },
+    { code: 'cs', name: 'Czech', flag: '🇨🇿' },
+    { code: 'da', name: 'Danish', flag: '🇩🇰' },
+    { code: 'de', name: 'German', flag: '🇩🇪' },
+    { code: 'el', name: 'Greek', flag: '🇬🇷' },
+    { code: 'en', name: 'English', flag: '🇬🇧' }, // fallback
+    { code: 'en-GB', name: 'English (British)', flag: '🇬🇧' },
+    { code: 'en-US', name: 'English (American)', flag: '🇺🇸' },
+    { code: 'es', name: 'Spanish', flag: '🇪🇸' }, // fallback
+    { code: 'es-419', name: 'Spanish (Latin American)', flag: '🇲🇽' },
+    { code: 'et', name: 'Estonian', flag: '🇪🇪' },
+    { code: 'fi', name: 'Finnish', flag: '🇫🇮' },
+    { code: 'fr', name: 'French', flag: '🇫🇷' },
+    { code: 'he', name: 'Hebrew', flag: '🇮🇱' },
+    { code: 'hu', name: 'Hungarian', flag: '🇭🇺' },
+    { code: 'id', name: 'Indonesian', flag: '🇮🇩' },
+    { code: 'it', name: 'Italian', flag: '🇮🇹' },
+    { code: 'ja', name: 'Japanese', flag: '🇯🇵' },
+    { code: 'ko', name: 'Korean', flag: '🇰🇷' },
+    { code: 'lt', name: 'Lithuanian', flag: '🇱🇹' },
+    { code: 'lv', name: 'Latvian', flag: '🇱🇻' },
+    { code: 'nb', name: 'Norwegian Bokmål', flag: '🇳🇴' },
+    { code: 'nl', name: 'Dutch', flag: '🇳🇱' },
+    { code: 'pl', name: 'Polish', flag: '🇵🇱' },
+    { code: 'pt', name: 'Portuguese', flag: '🇵🇹' }, // fallback
+    { code: 'pt-BR', name: 'Portuguese (Brazilian)', flag: '🇧🇷' },
+    { code: 'pt-PT', name: 'Portuguese (European)', flag: '🇵🇹' },
+    { code: 'ro', name: 'Romanian', flag: '🇷🇴' },
+    { code: 'ru', name: 'Russian', flag: '🇷🇺' },
+    { code: 'sk', name: 'Slovak', flag: '🇸🇰' },
+    { code: 'sl', name: 'Slovenian', flag: '🇸🇮' },
+    { code: 'sv', name: 'Swedish', flag: '🇸🇪' },
+    { code: 'th', name: 'Thai', flag: '🇹🇭' },
+    { code: 'tr', name: 'Turkish', flag: '🇹🇷' },
+    { code: 'uk', name: 'Ukrainian', flag: '🇺🇦' },
+    { code: 'vi', name: 'Vietnamese', flag: '🇻🇳' },
+    { code: 'zh', name: 'Chinese', flag: '🇨🇳' }, // fallback
+    { code: 'zh-HANS', name: 'Chinese (Simplified)', flag: '🇨🇳' },
+    { code: 'zh-HANT', name: 'Chinese (Traditional)', flag: '🇹🇼' },
+]; 
