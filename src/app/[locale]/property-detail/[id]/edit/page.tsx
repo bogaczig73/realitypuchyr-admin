@@ -53,6 +53,7 @@ export default function EditProperty() {
                 size: parseFloat(formData.get('size') as string),
                 beds: parseInt(formData.get('beds') as string),
                 baths: parseInt(formData.get('baths') as string),
+                priceHidden: formData.get('priceHidden') === 'on',
                 // Add other fields as needed
             };
 
@@ -188,6 +189,17 @@ export default function EditProperty() {
                                     className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-600"
                                     required
                                 />
+                            </div>
+
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-medium mb-2">Hide Price</label>
+                                <input
+                                    type="checkbox"
+                                    name="priceHidden"
+                                    defaultChecked={property.priceHidden}
+                                    className="mr-2"
+                                />
+                                <span>Hide price from public view</span>
                             </div>
 
                             <div className="md:col-span-2">

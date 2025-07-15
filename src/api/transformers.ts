@@ -65,7 +65,8 @@ export const transformProperty = (data: any): Property => ({
     images: data.images || [],
     floorplans: data.floorplans || [],
     reviews: data.reviews || [],
-    translations: data.translations || {}
+    translations: data.translations || {},
+    priceHidden: data.priceHidden ?? false,
 });
 
 export const transformCategory = (data: any): Category => ({

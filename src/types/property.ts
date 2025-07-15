@@ -259,6 +259,7 @@ export interface Property {
     floorplans: PropertyFloorplan[];
     reviews: Review[];
     translations: PropertyTranslation[];
+    priceHidden: boolean;
 }
 
 export interface Pagination {
