@@ -15,7 +15,7 @@ const SUPPORTED_LANGUAGES = [
     { code: 'en', name: 'English', flag: '🇺🇸' },
     { code: 'de', name: 'German', flag: '🇩🇪' },
     { code: 'ru', name: 'Russian', flag: '🇷🇺' },
-    { code: 'ua', name: 'Ukrainian', flag: '🇺🇦' },
+    { code: 'uk', name: 'Ukrainian', flag: '🇺🇦' },
     { code: 'vn', name: 'Vietnamese', flag: '🇻🇳' },
     { code: 'es', name: 'Spanish', flag: '🇪🇸' },
     { code: 'fr', name: 'French', flag: '🇫🇷' },
