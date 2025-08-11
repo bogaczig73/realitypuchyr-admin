@@ -5,7 +5,14 @@ export const transformProperty = (data: any): Property => ({
     id: data.id,
     name: data.name,
     categoryId: data.categoryId,
-    category: transformCategory(data.category),
+    category: data.category ? transformCategory(data.category) : {
+        id: data.categoryId || 0,
+        name: '',
+        slug: '',
+        image: '',
+        createdAt: '',
+        updatedAt: ''
+    },
     status: data.status,
     ownershipType: data.ownershipType,
     description: data.description,
@@ -69,11 +76,24 @@ export const transformProperty = (data: any): Property => ({
     priceHidden: data.priceHidden ?? false,
 });
 
-export const transformCategory = (data: any): Category => ({
-    id: data.id,
-    name: data.name,
-    slug: data.slug,
-    image: data.image,
-    createdAt: data.createdAt,
-    updatedAt: data.updatedAt
-}); 
+export const transformCategory = (data: any): Category => {
+    if (!data) {
+        return {
+            id: 0,
+            name: '',
+            slug: '',
+            image: '',
+            createdAt: '',
+            updatedAt: ''
+        };
+    }
+    
+    return {
+        id: data.id,
+        name: data.name,
+        slug: data.slug,
+        image: data.image,
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt
+    };
+}; 

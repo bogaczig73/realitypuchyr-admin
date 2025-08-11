@@ -50,6 +50,7 @@ export class PropertyService extends BaseService {
      */
     async updateProperty(id: number, data: Partial<Property>, locale: string = 'en'): Promise<Property> {
         const response = await this.put<any>(API_ENDPOINTS.properties.update(locale, id), data);
+        console.log('Raw update response:', response);
         return transformProperty(response);
     }
 
