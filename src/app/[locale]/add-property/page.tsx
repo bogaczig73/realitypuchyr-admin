@@ -1,1105 +1,657 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { PropertyStatus, OwnershipType } from "@/types/property";
 
 import Wrapper from "@/app/[locale]/components/wrapper";
-import ImageUpload from "@/app/[locale]/components/imageUpload";
-import FileUpload from "@/app/[locale]/components/FileUpload";
+import { DropZone, FileList, PhotoGrid, downscaleImage } from "./uploads";
+import { SECTIONS, ALL_FIELDS, emptyForm, toPayload, validate, Field } from "./fields";
 
-interface Category {
-    id: number;
-    name: string;
-    slug: string;
-    image: string;
-}
-
-interface FormData {
-    [key: string]: string | PropertyStatus | OwnershipType;
-    name: string;
-    categoryId: string;
-    status: PropertyStatus;
-    ownershipType: OwnershipType;
-    description: string;
-    city: string;
-    street: string;
-    country: string;
-    latitude: string;
-    longitude: string;
-    virtualTour: string;
-    videoUrl: string;
-    size: string;
-    beds: string;
-    baths: string;
-    price: string;
-    discountedPrice: string;
-    layout: string;
-    buildingStoriesNumber: string;
-    buildingCondition: string;
-    apartmentCondition: string;
-    aboveGroundFloors: string;
-    reconstructionYearApartment: string;
-    reconstructionYearBuilding: string;
-    totalAboveGroundFloors: string;
-    totalUndergroundFloors: string;
-    floorArea: string;
-    builtUpArea: string;
-    gardenHouseArea: string;
-    terraceArea: string;
-    totalLandArea: string;
-    gardenArea: string;
-    garageArea: string;
-    balconyArea: string;
-    pergolaArea: string;
-    basementArea: string;
-    workshopArea: string;
-    totalObjectArea: string;
-    usableArea: string;
-    landArea: string;
-    objectType: string;
-    objectLocationType: string;
-    houseEquipment: string;
-    accessRoad: string;
-    objectCondition: string;
-    reservationPrice: string;
-    equipmentDescription: string;
-    additionalSources: string;
-    buildingPermit: string;
-    buildability: string;
-    utilitiesOnLand: string;
-    utilitiesOnAdjacentRoad: string;
-    payments: string;
-    brokerId: string;
-    secondaryAgent: string;
-}
+interface Category { id: number; name: string; slug: string; image: string }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
 
-export default function AddProperty(){
+const authHeaders = (extra: Record<string, string> = {}) =>
+    API_KEY ? { ...extra, 'X-API-Key': API_KEY } : extra;
+
+const STEPS = [
+    { title: 'Dokumenty', hint: 'AI vyplní inzerát' },
+    { title: 'Údaje', hint: 'Zkontrolujte a doplňte' },
+    { title: 'Fotky a publikace', hint: 'Nahrajte fotky a uložte' }
+];
+
+const DOC_ACCEPT = '.pdf,image/*,.txt,.md,.csv';
+// The attachments endpoint accepts documents only - an image dropped here is
+// rejected server-side, so it is never offered as a one-click attachment.
+const ATTACHMENT_ACCEPT = '.pdf,.doc,.docx,.xls,.xlsx';
+const isAttachable = (file: File) => /\.(pdf|docx?|xlsx?)$/i.test(file.name);
+
+type FormState = Record<string, string | boolean>;
+
+export default function AddProperty() {
+    const [step, setStep] = useState(0);
     const [categories, setCategories] = useState<Category[]>([]);
-    const [formData, setFormData] = useState<FormData>({
-        // Basic Information
-        name: '',
-        categoryId: '',
-        status: PropertyStatus.ACTIVE,
-        ownershipType: OwnershipType.OWNERSHIP,
-        description: '',
-        city: '',
-        street: '',
-        country: '',
-        latitude: '',
-        longitude: '',
-        virtualTour: '',
-        videoUrl: '',
-        size: '',
-        beds: '',
-        baths: '',
-        price: '',
-        discountedPrice: '',
-        layout: '',
-
-        // Building Details
-        buildingStoriesNumber: '',
-        buildingCondition: '',
-        apartmentCondition: '',
-        aboveGroundFloors: '',
-        reconstructionYearApartment: '',
-        reconstructionYearBuilding: '',
-        totalAboveGroundFloors: '',
-        totalUndergroundFloors: '',
-
-        // Areas and Spaces
-        floorArea: '',
-        builtUpArea: '',
-        gardenHouseArea: '',
-        terraceArea: '',
-        totalLandArea: '',
-        gardenArea: '',
-        garageArea: '',
-        balconyArea: '',
-        pergolaArea: '',
-        basementArea: '',
-        workshopArea: '',
-        totalObjectArea: '',
-        usableArea: '',
-        landArea: '',
-
-        // Additional Information
-        objectType: '',
-        objectLocationType: '',
-        houseEquipment: '',
-        accessRoad: '',
-        objectCondition: '',
-        reservationPrice: '',
-        equipmentDescription: '',
-        additionalSources: '',
-        buildingPermit: '',
-        buildability: '',
-        utilitiesOnLand: '',
-        utilitiesOnAdjacentRoad: '',
-        payments: '',
-
-        // Agent Information
-        brokerId: '',
-        secondaryAgent: ''
-    });
-
+    const [form, setForm] = useState<FormState>(emptyForm);
     const [errors, setErrors] = useState<Record<string, string>>({});
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [submitSuccess, setSubmitSuccess] = useState(false);
+
+    // Step 1 - source documents for the AI
+    const [documents, setDocuments] = useState<File[]>([]);
+    const [note, setNote] = useState('');
+    const [extracting, setExtracting] = useState(false);
+    const [extractError, setExtractError] = useState<string | null>(null);
+    const [aiFilled, setAiFilled] = useState<Set<string>>(new Set());
+    const [needsCheck, setNeedsCheck] = useState<Set<string>>(new Set());
+    const [aiNotes, setAiNotes] = useState<string | null>(null);
+
+    // Step 3 - what actually gets published
+    const [photos, setPhotos] = useState<File[]>([]);
+    const [attachments, setAttachments] = useState<File[]>([]);
+
+    const [submitting, setSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
-    const currentYear = new Date().getFullYear();
+    const [createdId, setCreatedId] = useState<number | null>(null);
+
+    const topRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        // Fetch categories when component mounts
-        const fetchCategories = async () => {
-            try {
-                const headers: Record<string, string> = {};
-                
-                // Add API key if available
-                if (API_KEY) {
-                    headers['X-API-Key'] = API_KEY;
-                }
-                
-                const response = await fetch(`${API_BASE_URL}/categories`, { headers });
-                if (!response.ok) {
-                    throw new Error('Failed to fetch categories');
-                }
-                const data = await response.json();
+        fetch(`${API_BASE_URL}/categories`, { headers: authHeaders() })
+            .then(res => res.ok ? res.json() : Promise.reject(new Error('Kategorie se nepodařilo načíst')))
+            .then((data: Category[]) => {
                 setCategories(data);
-                // Set default category if available
-                if (data.length > 0) {
-                    setFormData(prev => ({
-                        ...prev,
-                        categoryId: data[0].id.toString()
-                    }));
-                }
-            } catch (error) {
-                console.error('Error fetching categories:', error);
-            }
-        };
-
-        fetchCategories();
+                setForm(prev => prev.categoryId ? prev : { ...prev, categoryId: String(data[0]?.id ?? '') });
+            })
+            .catch(err => console.error(err));
     }, []);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-        // Clear error when user starts typing
-        if (errors[name]) {
-            setErrors(prev => {
-                const newErrors = { ...prev };
-                delete newErrors[name];
-                return newErrors;
+    const goToStep = (next: number) => {
+        setStep(next);
+        topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    const setValue = (name: string, value: string | boolean) => {
+        setForm(prev => ({ ...prev, [name]: value }));
+        // Once the agent touches a field it is his, not the AI's.
+        setAiFilled(prev => { if (!prev.has(name)) return prev; const next = new Set(prev); next.delete(name); return next; });
+        setNeedsCheck(prev => { if (!prev.has(name)) return prev; const next = new Set(prev); next.delete(name); return next; });
+        setErrors(prev => { if (!prev[name]) return prev; const next = { ...prev }; delete next[name]; return next; });
+    };
+
+    const runExtraction = async () => {
+        if (documents.length === 0) return;
+        setExtracting(true);
+        setExtractError(null);
+        try {
+            const body = new FormData();
+            documents.forEach(file => body.append('documents', file));
+            if (note.trim()) body.append('note', note.trim());
+
+            const response = await fetch(`${API_BASE_URL}/properties/extract`, {
+                method: 'POST',
+                headers: authHeaders({ Accept: 'application/json' }),
+                body
             });
+
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(result.error || `Chyba serveru (${response.status})`);
+
+            const filled: FormState = {};
+            for (const field of ALL_FIELDS) {
+                const value = result.fields?.[field.name];
+                if (value === undefined || value === null) continue;
+                filled[field.name] = field.kind === 'checkbox' ? Boolean(value) : String(value);
+            }
+
+            setForm(prev => ({ ...prev, ...filled }));
+            setAiFilled(new Set(Object.keys(filled)));
+            setNeedsCheck(new Set((result.lowConfidenceFields ?? []).filter((f: string) => f in filled)));
+            setAiNotes(result.notes ?? null);
+            goToStep(1);
+        } catch (error) {
+            setExtractError(error instanceof Error ? error.message : 'Nepodařilo se zpracovat dokumenty');
+        } finally {
+            setExtracting(false);
         }
     };
 
-    const validateForm = () => {
-        const newErrors: Record<string, string> = {};
-        
-        // Validate year fields
-        if (formData.reconstructionYearApartment) {
-            const year = Number(formData.reconstructionYearApartment);
-            if (year < 1800 || year > currentYear) {
-                newErrors.reconstructionYearApartment = `Year must be between 1800 and ${currentYear}`;
-            }
-        }
-        
-        if (formData.reconstructionYearBuilding) {
-            const year = Number(formData.reconstructionYearBuilding);
-            if (year < 1800 || year > currentYear) {
-                newErrors.reconstructionYearBuilding = `Year must be between 1800 and ${currentYear}`;
-            }
-        }
-
-        // Validate numeric fields
-        const numericFields = [
-            'size', 'beds', 'baths', 'buildingStoriesNumber', 'aboveGroundFloors',
-            'totalAboveGroundFloors', 'totalUndergroundFloors'
-        ];
-
-        numericFields.forEach(field => {
-            if (formData[field] && Number(formData[field]) < 0) {
-                newErrors[field] = 'Value cannot be negative';
-            }
-        });
-
-        // Validate area fields
-        const areaFields = [
-            'floorArea', 'builtUpArea', 'gardenHouseArea', 'terraceArea',
-            'totalLandArea', 'gardenArea', 'garageArea', 'balconyArea',
-            'pergolaArea', 'basementArea', 'workshopArea', 'totalObjectArea',
-            'usableArea', 'landArea'
-        ];
-
-        areaFields.forEach(field => {
-            if (formData[field] && Number(formData[field]) < 0) {
-                newErrors[field] = 'Area cannot be negative';
-            }
-        });
-
-        // Validate price fields
-        const priceFields = ['price', 'discountedPrice', 'reservationPrice'];
-        priceFields.forEach(field => {
-            if (formData[field] && Number(formData[field]) < 0) {
-                newErrors[field] = 'Price cannot be negative';
-            }
-        });
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        
-        if (!validateForm()) {
-            alert('Please fix the validation errors before submitting the form.');
+    const handleReview = () => {
+        const found = validate(form);
+        setErrors(found);
+        if (Object.keys(found).length > 0) {
+            const first = ALL_FIELDS.find(f => found[f.name]);
+            document.getElementById(first?.name ?? '')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;
         }
-        
+        goToStep(2);
+    };
+
+    const handleSubmit = async () => {
+        const found = validate(form);
+        if (Object.keys(found).length > 0) {
+            setErrors(found);
+            goToStep(1);
+            return;
+        }
+
+        setSubmitting(true);
+        setSubmitError(null);
         try {
-            setIsSubmitting(true);
-            setSubmitError(null);
-            
-            // Convert form data to proper types
-            const processedData: Record<string, any> = {};
-            
-            Object.entries(formData).forEach(([key, value]) => {
-                // Skip empty strings and convert them to null
-                if (value === '') {
-                    processedData[key] = null;
-                    return;
-                }
+            const body = new FormData();
+            body.append('data', JSON.stringify(toPayload(form)));
+            // Order is meaningful: the API marks the first image as the main photo.
+            photos.forEach(photo => body.append('images', photo));
+            attachments.forEach(file => body.append('files', file));
 
-                if (key === 'categoryId' || key === 'status' || key === 'ownershipType') {
-                    processedData[key] = value.toUpperCase();
-                } else if (['size', 'beds', 'baths', 'buildingStoriesNumber', 'aboveGroundFloors', 
-                          'reconstructionYearApartment', 'reconstructionYearBuilding', 
-                          'totalAboveGroundFloors', 'totalUndergroundFloors'].includes(key)) {
-                    const numValue = Number(value);
-                    if (!isNaN(numValue) && numValue >= 0) {
-                        processedData[key] = Math.floor(numValue);
-                    } else {
-                        processedData[key] = null;
-                    }
-                } else if (['price', 'discountedPrice', 'reservationPrice'].includes(key)) {
-                    const numValue = Number(value);
-                    if (!isNaN(numValue) && numValue >= 0) {
-                        processedData[key] = numValue;
-                    } else {
-                        processedData[key] = null;
-                    }
-                } else if (['floorArea', 'builtUpArea', 'gardenHouseArea', 'terraceArea', 
-                          'totalLandArea', 'gardenArea', 'garageArea', 'balconyArea', 
-                          'pergolaArea', 'basementArea', 'workshopArea', 'totalObjectArea', 
-                          'usableArea', 'landArea'].includes(key)) {
-                    const numValue = Number(value);
-                    if (!isNaN(numValue) && numValue >= 0) {
-                        processedData[key] = numValue;
-                    } else {
-                        processedData[key] = null;
-                    }
-                } else {
-                    processedData[key] = value;
-                }
-            });
-
-            // Handle files separately
-            const formDataToSend = new FormData();
-            
-            // Add the processed JSON data
-            formDataToSend.append('data', JSON.stringify(processedData));
-
-            // Get the image files from the ImageUpload component
-            const imageInput = document.querySelector('input[name="images"]') as HTMLInputElement;
-            if (imageInput && imageInput.files) {
-                Array.from(imageInput.files).forEach((file, index) => {
-                    formDataToSend.append('images', file);
-                    formDataToSend.append('imageMainFlags', index === 0 ? 'true' : 'false');
-                });
-            }
-
-            // Get the files from the FileUpload component
-            const fileInput = document.querySelector('input[name="files"]') as HTMLInputElement;
-            if (fileInput && fileInput.files) {
-                Array.from(fileInput.files).forEach((file) => {
-                    formDataToSend.append('files', file);
-                });
-            }
-
-            // Log the data being sent
-            console.log('Raw form data:', formData);
-            console.log('Processed data before sending:', processedData);
-            console.log('FormData contents:');
-            formDataToSend.forEach((value, key) => {
-                if (key === 'data') {
-                    console.log('data field:', JSON.parse(value as string));
-                } else {
-                    console.log(`${key}:`, value);
-                }
-            });
-
-            // Prepare headers
-            const headers: Record<string, string> = {
-                'Accept': 'application/json',
-            };
-            
-            // Add API key if available
-            if (API_KEY) {
-                headers['X-API-Key'] = API_KEY;
-            }
-
-            // Send the request
             const response = await fetch(`${API_BASE_URL}/properties`, {
                 method: 'POST',
-                body: formDataToSend,
-                headers,
+                headers: authHeaders({ Accept: 'application/json' }),
+                body
             });
 
+            const result = await response.json().catch(() => ({}));
             if (!response.ok) {
-                const contentType = response.headers.get('content-type');
-                if (contentType && contentType.includes('application/json')) {
-                    const errorData = await response.json();
-                    if (errorData.details) {
-                        throw new Error(`Validation failed:\n${errorData.details.join('\n')}`);
-                    } else if (errorData.error) {
-                        throw new Error(errorData.error);
-                    }
-                }
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error(result.details ? result.details.join('\n') : result.error || `Chyba serveru (${response.status})`);
             }
-
-            const result = await response.json();
-            console.log('Property created successfully:', result);
-            setSubmitSuccess(true);
-            
-            // Reset form
-            setFormData({
-                name: '',
-                categoryId: categories.length > 0 ? categories[0].id.toString() : '',
-                status: PropertyStatus.ACTIVE,
-                ownershipType: OwnershipType.OWNERSHIP,
-                description: '',
-                city: '',
-                street: '',
-                country: '',
-                latitude: '',
-                longitude: '',
-                virtualTour: '',
-                videoUrl: '',
-                size: '',
-                beds: '',
-                baths: '',
-                price: '',
-                discountedPrice: '',
-                layout: '',
-                buildingStoriesNumber: '',
-                buildingCondition: '',
-                apartmentCondition: '',
-                aboveGroundFloors: '',
-                reconstructionYearApartment: '',
-                reconstructionYearBuilding: '',
-                totalAboveGroundFloors: '',
-                totalUndergroundFloors: '',
-                floorArea: '',
-                builtUpArea: '',
-                gardenHouseArea: '',
-                terraceArea: '',
-                totalLandArea: '',
-                gardenArea: '',
-                garageArea: '',
-                balconyArea: '',
-                pergolaArea: '',
-                basementArea: '',
-                workshopArea: '',
-                totalObjectArea: '',
-                usableArea: '',
-                landArea: '',
-                objectType: '',
-                objectLocationType: '',
-                houseEquipment: '',
-                accessRoad: '',
-                objectCondition: '',
-                reservationPrice: '',
-                equipmentDescription: '',
-                additionalSources: '',
-                buildingPermit: '',
-                buildability: '',
-                utilitiesOnLand: '',
-                utilitiesOnAdjacentRoad: '',
-                payments: '',
-                brokerId: '',
-                secondaryAgent: ''
-            });
-            setErrors({});
-            
+            setCreatedId(result.id ?? null);
         } catch (error) {
-            console.error('Error creating property:', error);
-            setSubmitError(error instanceof Error ? error.message : 'An error occurred while creating the property');
+            setSubmitError(error instanceof Error ? error.message : 'Nemovitost se nepodařilo uložit');
         } finally {
-            setIsSubmitting(false);
+            setSubmitting(false);
         }
     };
 
-    return(
+    const startOver = () => {
+        setForm({ ...emptyForm(), categoryId: String(categories[0]?.id ?? '') });
+        setDocuments([]); setPhotos([]); setAttachments([]);
+        setAiFilled(new Set()); setNeedsCheck(new Set()); setAiNotes(null);
+        setNote(''); setErrors({}); setCreatedId(null); setSubmitError(null); setExtractError(null);
+        goToStep(0);
+    };
+
+    if (createdId !== null) {
+        return (
+            <Wrapper>
+                <div className="container-fluid relative px-3">
+                    <div className="layout-specing">
+                        <div className="rounded-md shadow-sm shadow-gray-200 dark:shadow-gray-700 p-10 bg-white dark:bg-slate-900 text-center max-w-xl mx-auto mt-10">
+                            <i className="mdi mdi-check-circle text-6xl text-green-600"></i>
+                            <h5 className="text-xl font-semibold mt-4">Nemovitost byla publikována</h5>
+                            <p className="text-slate-400 mt-2">
+                                {photos.length} {photos.length === 1 ? 'fotka' : 'fotek'} a {attachments.length} {attachments.length === 1 ? 'příloha' : 'příloh'} nahráno.
+                            </p>
+                            <div className="flex gap-3 justify-center mt-6">
+                                <Link href={`/property-detail/${createdId}`} className="btn bg-green-600 hover:bg-green-700 border-green-600 hover:border-green-700 text-white rounded-md">
+                                    Zobrazit inzerát
+                                </Link>
+                                <button type="button" onClick={startOver} className="btn bg-transparent hover:bg-green-600 border border-green-600 text-green-600 hover:text-white rounded-md">
+                                    Přidat další
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Wrapper>
+        );
+    }
+
+    return (
         <Wrapper>
             <div className="container-fluid relative px-3">
-                <div className="layout-specing">
+                <div className="layout-specing" ref={topRef}>
                     <div className="md:flex justify-between items-center">
-                        <h5 className="text-lg font-semibold">Add Property</h5>
-
+                        <h5 className="text-lg font-semibold">Nová nemovitost</h5>
                         <ul className="tracking-[0.5px] inline-block sm:mt-0 mt-3">
-                            <li className="inline-block capitalize text-[16px] font-medium duration-500 dark:text-white/70 hover:text-green-600 dark:hover:text-white"><Link href="/">Hously</Link></li>
-                            <li className="inline-block text-base text-slate-950 dark:text-white/70 mx-0.5 ltr:rotate-0 rtl:rotate-180"><i className="mdi mdi-chevron-right"></i></li>
-                            <li className="inline-block capitalize text-[16px] font-medium text-green-600 dark:text-white" aria-current="page">Add Property</li>
+                            <li className="inline-block capitalize text-[16px] font-medium duration-500 dark:text-white/70 hover:text-green-600"><Link href="/">Přehled</Link></li>
+                            <li className="inline-block text-base text-slate-950 dark:text-white/70 mx-0.5"><i className="mdi mdi-chevron-right"></i></li>
+                            <li className="inline-block capitalize text-[16px] font-medium text-green-600 dark:text-white" aria-current="page">Nová nemovitost</li>
                         </ul>
                     </div>
 
-                    <div className="container relative">
-                        <div className="grid grid-cols-1 gap-6 mt-6">
-                            <div className="rounded-md shadow-sm shadow-gray-200 dark:shadow-gray-700 p-6 bg-white dark:bg-slate-900">
-                                <ImageUpload/>
-                            </div>
+                    <StepBar step={step} onJump={goToStep} />
 
-                            <div className="rounded-md shadow-sm shadow-gray-200 dark:shadow-gray-700 p-6 bg-white dark:bg-slate-900">
-                                <FileUpload/>
-                            </div>
+                    <div className="mt-6">
+                        {step === 0 && (
+                            <IntakeStep
+                                documents={documents}
+                                setDocuments={setDocuments}
+                                note={note}
+                                setNote={setNote}
+                                extracting={extracting}
+                                error={extractError}
+                                onExtract={runExtraction}
+                                onSkip={() => goToStep(1)}
+                            />
+                        )}
 
-                            <form onSubmit={handleSubmit} className="space-y-8">
-                                {/* Basic Information Section */}
-                                <div className="rounded-md shadow-sm shadow-gray-200 dark:shadow-gray-700 p-6 bg-white dark:bg-slate-900">
-                                    <h6 className="text-lg font-semibold mb-4 text-green-600">Basic Information</h6>
-                                    <div className="grid grid-cols-12 gap-5">
-                                        <div className="col-span-12">
-                                            <label htmlFor="name" className="font-medium">Title:</label>
-                                            <input name="name" id="name" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2 focus:!border-green-500 focus:ring-2 focus:ring-green-200 dark:focus:ring-green-800 transition-colors duration-200" placeholder="Property Title" value={formData.name} onChange={handleInputChange}/>
-                                        </div>
+                        {step === 1 && (
+                            <ReviewStep
+                                form={form}
+                                errors={errors}
+                                categories={categories}
+                                aiFilled={aiFilled}
+                                needsCheck={needsCheck}
+                                aiNotes={aiNotes}
+                                onChange={setValue}
+                                onBack={() => goToStep(0)}
+                                onNext={handleReview}
+                            />
+                        )}
 
-                                        <div className="col-span-12 md:col-span-4">
-                                            <label htmlFor="categoryId" className="font-medium">Category:</label>
-                                            <select 
-                                                name="categoryId" 
-                                                id="categoryId" 
-                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2 focus:!border-green-500 focus:ring-2 focus:ring-green-200 dark:focus:ring-green-800 transition-colors duration-200" 
-                                                value={formData.categoryId} 
-                                                onChange={handleInputChange}
-                                            >
-                                                {categories.map((category) => (
-                                                    <option key={category.id} value={category.id}>
-                                                        {category.name}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-4">
-                                            <label htmlFor="status" className="font-medium">Status:</label>
-                                            <select name="status" id="status" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2 focus:!border-green-500 focus:ring-2 focus:ring-green-200 dark:focus:ring-green-800 transition-colors duration-200" value={formData.status} onChange={handleInputChange}>
-                                                <option value="ACTIVE">Active</option>
-                                                <option value="SOLD">Sold</option>
-                                            </select>
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-4">
-                                            <label htmlFor="ownershipType" className="font-medium">Ownership Type:</label>
-                                            <select name="ownershipType" id="ownershipType" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2 focus:!border-green-500 focus:ring-2 focus:ring-green-200 dark:focus:ring-green-800 transition-colors duration-200" value={formData.ownershipType} onChange={handleInputChange}>
-                                                <option value="OWNERSHIP">Ownership</option>
-                                                <option value="RENT">Rent</option>
-                                            </select>
-                                        </div>
-
-                                        <div className="col-span-12">
-                                            <label htmlFor="description" className="font-medium">Description:</label>
-                                            <textarea name="description" id="description" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2 focus:!border-green-500 focus:ring-2 focus:ring-green-200 dark:focus:ring-green-800 transition-colors duration-200" rows={4} placeholder="Property Description" value={formData.description} onChange={handleInputChange}></textarea>
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-4">
-                                            <label htmlFor="virtualTour" className="font-medium">Virtual Tour:</label>
-                                            <input
-                                                name="virtualTour"
-                                                id="virtualTour"
-                                                type="text"
-                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2 focus:!border-green-500 focus:ring-2 focus:ring-green-200 dark:focus:ring-green-800 transition-colors duration-200"
-                                                placeholder="Enter Matterport or other virtual tour iframe URL"
-                                                value={formData.virtualTour}
-                                                onChange={handleInputChange}
-                                            />
-                                            {formData.virtualTour && (
-                                                <div className="mt-4 aspect-video">
-                                                    <iframe
-                                                        src={formData.virtualTour}
-                                                        className="w-full h-full rounded-lg"
-                                                        allowFullScreen
-                                                    />
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="videoUrl" className="font-medium">Video URL:</label>
-                                            <input name="videoUrl" id="videoUrl" type="url" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2 focus:!border-green-500 focus:ring-2 focus:ring-green-200 dark:focus:ring-green-800 transition-colors duration-200" placeholder="Video URL" value={formData.videoUrl} onChange={handleInputChange}/>
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-4">
-                                            <label htmlFor="size" className="font-medium">Size:</label>
-                                            <input 
-                                                name="size" 
-                                                id="size" 
-                                                type="number" 
-                                                min="0"
-                                                step="1"
-                                                className={`form-input border ${errors.size ? '!border-red-500' : '!border-gray-200 dark:!border-gray-800'} mt-2`}
-                                                placeholder="Size in m²" 
-                                                value={formData.size} 
-                                                onChange={handleInputChange}
-                                            />
-                                            {errors.size && (
-                                                <p className="text-red-500 text-sm mt-1">{errors.size}</p>
-                                            )}
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-4">
-                                            <label htmlFor="beds" className="font-medium">Beds:</label>
-                                            <input 
-                                                name="beds" 
-                                                id="beds" 
-                                                type="number" 
-                                                min="0"
-                                                step="1"
-                                                className={`form-input border ${errors.beds ? '!border-red-500' : '!border-gray-200 dark:!border-gray-800'} mt-2`}
-                                                placeholder="Number of beds" 
-                                                value={formData.beds} 
-                                                onChange={handleInputChange}
-                                            />
-                                            {errors.beds && (
-                                                <p className="text-red-500 text-sm mt-1">{errors.beds}</p>
-                                            )}
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-4">
-                                            <label htmlFor="baths" className="font-medium">Baths:</label>
-                                            <input 
-                                                name="baths" 
-                                                id="baths" 
-                                                type="number" 
-                                                min="0"
-                                                step="1"
-                                                className={`form-input border ${errors.baths ? '!border-red-500' : '!border-gray-200 dark:!border-gray-800'} mt-2`}
-                                                placeholder="Number of baths" 
-                                                value={formData.baths} 
-                                                onChange={handleInputChange}
-                                            />
-                                            {errors.baths && (
-                                                <p className="text-red-500 text-sm mt-1">{errors.baths}</p>
-                                            )}
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="price" className="font-medium">Price:</label>
-                                            <input 
-                                                name="price" 
-                                                id="price" 
-                                                type="number" 
-                                                min="0"
-                                                step="0.01"
-                                                className={`form-input border ${errors.price ? '!border-red-500' : '!border-gray-200 dark:!border-gray-800'} mt-2`}
-                                                placeholder="Price" 
-                                                value={formData.price} 
-                                                onChange={handleInputChange}
-                                            />
-                                            {errors.price && (
-                                                <p className="text-red-500 text-sm mt-1">{errors.price}</p>
-                                            )}
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="discountedPrice" className="font-medium">Discounted Price:</label>
-                                            <input 
-                                                name="discountedPrice" 
-                                                id="discountedPrice" 
-                                                type="number" 
-                                                min="0"
-                                                step="0.01"
-                                                className={`form-input border ${errors.discountedPrice ? '!border-red-500' : '!border-gray-200 dark:!border-gray-800'} mt-2`}
-                                                placeholder="Discounted Price" 
-                                                value={formData.discountedPrice} 
-                                                onChange={handleInputChange}
-                                            />
-                                            {errors.discountedPrice && (
-                                                <p className="text-red-500 text-sm mt-1">{errors.discountedPrice}</p>
-                                            )}
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-4">
-                                            <label htmlFor="layout" className="font-medium">Layout:</label>
-                                            <input name="layout" id="layout" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2 focus:!border-green-500 focus:ring-2 focus:ring-green-200 dark:focus:ring-green-800 transition-colors duration-200" placeholder="e.g., 2+1, 3+kk" value={formData.layout} onChange={handleInputChange}/>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Location Information Section */}
-                                <div className="rounded-md shadow-sm shadow-gray-200 dark:shadow-gray-700 p-6 bg-white dark:bg-slate-900">
-                                    <h6 className="text-lg font-semibold mb-4 text-green-600">Location Information</h6>
-                                    <div className="grid grid-cols-12 gap-5">
-                                        <div className="col-span-12 md:col-span-4">
-                                            <label htmlFor="city" className="font-medium">City:</label>
-                                            <input name="city" id="city" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2 focus:!border-green-500 focus:ring-2 focus:ring-green-200 dark:focus:ring-green-800 transition-colors duration-200" placeholder="City" value={formData.city} onChange={handleInputChange}/>
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-4">
-                                            <label htmlFor="street" className="font-medium">Street:</label>
-                                            <input name="street" id="street" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2 focus:!border-green-500 focus:ring-2 focus:ring-green-200 dark:focus:ring-green-800 transition-colors duration-200" placeholder="Street" value={formData.street} onChange={handleInputChange}/>
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-4">
-                                            <label htmlFor="country" className="font-medium">Country:</label>
-                                            <input name="country" id="country" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2 focus:!border-green-500 focus:ring-2 focus:ring-green-200 dark:focus:ring-green-800 transition-colors duration-200" placeholder="Country" value={formData.country} onChange={handleInputChange}/>
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="latitude" className="font-medium">Latitude:</label>
-                                            <input name="latitude" id="latitude" type="number" step="any" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2 focus:!border-green-500 focus:ring-2 focus:ring-green-200 dark:focus:ring-green-800 transition-colors duration-200" placeholder="Latitude" value={formData.latitude} onChange={handleInputChange}/>
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="longitude" className="font-medium">Longitude:</label>
-                                            <input name="longitude" id="longitude" type="number" step="any" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2 focus:!border-green-500 focus:ring-2 focus:ring-green-200 dark:focus:ring-green-800 transition-colors duration-200" placeholder="Longitude" value={formData.longitude} onChange={handleInputChange}/>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Building Details Section */}
-                                <div className="rounded-md shadow-sm shadow-gray-200 dark:shadow-gray-700 p-6 bg-white dark:bg-slate-900">
-                                    <h6 className="text-lg font-semibold mb-4 text-green-600">Building Details</h6>
-                                    <div className="grid grid-cols-12 gap-5">
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="buildingStoriesNumber" className="font-medium">Building Stories Number:</label>
-                                            <input 
-                                                name="buildingStoriesNumber" 
-                                                id="buildingStoriesNumber" 
-                                                type="number" 
-                                                min="0"
-                                                step="1"
-                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
-                                                placeholder="Number of stories" 
-                                                value={formData.buildingStoriesNumber} 
-                                                onChange={handleInputChange}
-                                            />
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="buildingCondition" className="font-medium">Building Condition:</label>
-                                            <input name="buildingCondition" id="buildingCondition" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Building Condition" value={formData.buildingCondition} onChange={handleInputChange}/>
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="apartmentCondition" className="font-medium">Apartment Condition:</label>
-                                            <input name="apartmentCondition" id="apartmentCondition" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Apartment Condition" value={formData.apartmentCondition} onChange={handleInputChange}/>
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="aboveGroundFloors" className="font-medium">Above Ground Floors:</label>
-                                            <input 
-                                                name="aboveGroundFloors" 
-                                                id="aboveGroundFloors" 
-                                                type="number" 
-                                                min="0"
-                                                step="1"
-                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
-                                                placeholder="Number of above ground floors" 
-                                                value={formData.aboveGroundFloors} 
-                                                onChange={handleInputChange}
-                                            />
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="reconstructionYearApartment" className="font-medium">Apartment Reconstruction Year:</label>
-                                            <input 
-                                                name="reconstructionYearApartment" 
-                                                id="reconstructionYearApartment" 
-                                                type="number" 
-                                                min="1800"
-                                                max={currentYear}
-                                                step="1"
-                                                className={`form-input border ${errors.reconstructionYearApartment ? '!border-red-500' : '!border-gray-200 dark:!border-gray-800'} mt-2`}
-                                                placeholder="Year of reconstruction" 
-                                                value={formData.reconstructionYearApartment} 
-                                                onChange={handleInputChange}
-                                            />
-                                            {errors.reconstructionYearApartment && (
-                                                <p className="text-red-500 text-sm mt-1">{errors.reconstructionYearApartment}</p>
-                                            )}
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="reconstructionYearBuilding" className="font-medium">Building Reconstruction Year:</label>
-                                            <input 
-                                                name="reconstructionYearBuilding" 
-                                                id="reconstructionYearBuilding" 
-                                                type="number" 
-                                                min="1800"
-                                                max={currentYear}
-                                                step="1"
-                                                className={`form-input border ${errors.reconstructionYearBuilding ? '!border-red-500' : '!border-gray-200 dark:!border-gray-800'} mt-2`}
-                                                placeholder="Year of reconstruction" 
-                                                value={formData.reconstructionYearBuilding} 
-                                                onChange={handleInputChange}
-                                            />
-                                            {errors.reconstructionYearBuilding && (
-                                                <p className="text-red-500 text-sm mt-1">{errors.reconstructionYearBuilding}</p>
-                                            )}
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="totalAboveGroundFloors" className="font-medium">Total Above Ground Floors:</label>
-                                            <input 
-                                                name="totalAboveGroundFloors" 
-                                                id="totalAboveGroundFloors" 
-                                                type="number" 
-                                                min="0"
-                                                step="1"
-                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
-                                                placeholder="Total number of above ground floors" 
-                                                value={formData.totalAboveGroundFloors} 
-                                                onChange={handleInputChange}
-                                            />
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="totalUndergroundFloors" className="font-medium">Total Underground Floors:</label>
-                                            <input 
-                                                name="totalUndergroundFloors" 
-                                                id="totalUndergroundFloors" 
-                                                type="number" 
-                                                min="0"
-                                                step="1"
-                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
-                                                placeholder="Total number of underground floors" 
-                                                value={formData.totalUndergroundFloors} 
-                                                onChange={handleInputChange}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Areas and Spaces Section */}
-                                <div className="rounded-md shadow-sm shadow-gray-200 dark:shadow-gray-700 p-6 bg-white dark:bg-slate-900">
-                                    <h6 className="text-lg font-semibold mb-4 text-green-600">Areas and Spaces</h6>
-                                    <div className="grid grid-cols-12 gap-5">
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="floorArea" className="font-medium">Floor Area:</label>
-                                            <input 
-                                                name="floorArea" 
-                                                id="floorArea" 
-                                                type="number" 
-                                                min="0"
-                                                step="0.01"
-                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
-                                                placeholder="Floor area in m²" 
-                                                value={formData.floorArea} 
-                                                onChange={handleInputChange}
-                                            />
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="builtUpArea" className="font-medium">Built Up Area:</label>
-                                            <input 
-                                                name="builtUpArea" 
-                                                id="builtUpArea" 
-                                                type="number" 
-                                                min="0"
-                                                step="0.01"
-                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
-                                                placeholder="Built up area in m²" 
-                                                value={formData.builtUpArea} 
-                                                onChange={handleInputChange}
-                                            />
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="gardenHouseArea" className="font-medium">Garden House Area:</label>
-                                            <input 
-                                                name="gardenHouseArea" 
-                                                id="gardenHouseArea" 
-                                                type="number" 
-                                                min="0"
-                                                step="0.01"
-                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
-                                                placeholder="Garden house area in m²" 
-                                                value={formData.gardenHouseArea} 
-                                                onChange={handleInputChange}
-                                            />
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="terraceArea" className="font-medium">Terrace Area:</label>
-                                            <input 
-                                                name="terraceArea" 
-                                                id="terraceArea" 
-                                                type="number" 
-                                                min="0"
-                                                step="0.01"
-                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
-                                                placeholder="Terrace area in m²" 
-                                                value={formData.terraceArea} 
-                                                onChange={handleInputChange}
-                                            />
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="totalLandArea" className="font-medium">Total Land Area:</label>
-                                            <input 
-                                                name="totalLandArea" 
-                                                id="totalLandArea" 
-                                                type="number" 
-                                                min="0"
-                                                step="0.01"
-                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
-                                                placeholder="Total land area in m²" 
-                                                value={formData.totalLandArea} 
-                                                onChange={handleInputChange}
-                                            />
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="gardenArea" className="font-medium">Garden Area:</label>
-                                            <input 
-                                                name="gardenArea" 
-                                                id="gardenArea" 
-                                                type="number" 
-                                                min="0"
-                                                step="0.01"
-                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
-                                                placeholder="Garden area in m²" 
-                                                value={formData.gardenArea} 
-                                                onChange={handleInputChange}
-                                            />
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="garageArea" className="font-medium">Garage Area:</label>
-                                            <input 
-                                                name="garageArea" 
-                                                id="garageArea" 
-                                                type="number" 
-                                                min="0"
-                                                step="0.01"
-                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
-                                                placeholder="Garage area in m²" 
-                                                value={formData.garageArea} 
-                                                onChange={handleInputChange}
-                                            />
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="balconyArea" className="font-medium">Balcony Area:</label>
-                                            <input 
-                                                name="balconyArea" 
-                                                id="balconyArea" 
-                                                type="number" 
-                                                min="0"
-                                                step="0.01"
-                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
-                                                placeholder="Balcony area in m²" 
-                                                value={formData.balconyArea} 
-                                                onChange={handleInputChange}
-                                            />
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="pergolaArea" className="font-medium">Pergola Area:</label>
-                                            <input 
-                                                name="pergolaArea" 
-                                                id="pergolaArea" 
-                                                type="number" 
-                                                min="0"
-                                                step="0.01"
-                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
-                                                placeholder="Pergola area in m²" 
-                                                value={formData.pergolaArea} 
-                                                onChange={handleInputChange}
-                                            />
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="basementArea" className="font-medium">Basement Area:</label>
-                                            <input 
-                                                name="basementArea" 
-                                                id="basementArea" 
-                                                type="number" 
-                                                min="0"
-                                                step="0.01"
-                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
-                                                placeholder="Basement area in m²" 
-                                                value={formData.basementArea} 
-                                                onChange={handleInputChange}
-                                            />
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="workshopArea" className="font-medium">Workshop Area:</label>
-                                            <input 
-                                                name="workshopArea" 
-                                                id="workshopArea" 
-                                                type="number" 
-                                                min="0"
-                                                step="0.01"
-                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
-                                                placeholder="Workshop area in m²" 
-                                                value={formData.workshopArea} 
-                                                onChange={handleInputChange}
-                                            />
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="totalObjectArea" className="font-medium">Total Object Area:</label>
-                                            <input 
-                                                name="totalObjectArea" 
-                                                id="totalObjectArea" 
-                                                type="number" 
-                                                min="0"
-                                                step="0.01"
-                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
-                                                placeholder="Total object area in m²" 
-                                                value={formData.totalObjectArea} 
-                                                onChange={handleInputChange}
-                                            />
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="usableArea" className="font-medium">Usable Area:</label>
-                                            <input 
-                                                name="usableArea" 
-                                                id="usableArea" 
-                                                type="number" 
-                                                min="0"
-                                                step="0.01"
-                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
-                                                placeholder="Usable area in m²" 
-                                                value={formData.usableArea} 
-                                                onChange={handleInputChange}
-                                            />
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="landArea" className="font-medium">Land Area:</label>
-                                            <input 
-                                                name="landArea" 
-                                                id="landArea" 
-                                                type="number" 
-                                                min="0"
-                                                step="0.01"
-                                                className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" 
-                                                placeholder="Land area in m²" 
-                                                value={formData.landArea} 
-                                                onChange={handleInputChange}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Additional Information Section */}
-                                <div className="rounded-md shadow-sm shadow-gray-200 dark:shadow-gray-700 p-6 bg-white dark:bg-slate-900">
-                                    <h6 className="text-lg font-semibold mb-4 text-green-600">Additional Information</h6>
-                                    <div className="grid grid-cols-12 gap-5">
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="objectType" className="font-medium">Object Type:</label>
-                                            <input name="objectType" id="objectType" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Object Type" value={formData.objectType} onChange={handleInputChange}/>
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="objectLocationType" className="font-medium">Object Location Type:</label>
-                                            <input name="objectLocationType" id="objectLocationType" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Object Location Type" value={formData.objectLocationType} onChange={handleInputChange}/>
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="houseEquipment" className="font-medium">House Equipment:</label>
-                                            <input name="houseEquipment" id="houseEquipment" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="House Equipment" value={formData.houseEquipment} onChange={handleInputChange}/>
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="accessRoad" className="font-medium">Access Road:</label>
-                                            <input name="accessRoad" id="accessRoad" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Access Road" value={formData.accessRoad} onChange={handleInputChange}/>
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="objectCondition" className="font-medium">Object Condition:</label>
-                                            <input name="objectCondition" id="objectCondition" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Object Condition" value={formData.objectCondition} onChange={handleInputChange}/>
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="reservationPrice" className="font-medium">Reservation Price:</label>
-                                            <input name="reservationPrice" id="reservationPrice" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Reservation Price" value={formData.reservationPrice} onChange={handleInputChange}/>
-                                        </div>
-
-                                        <div className="col-span-12">
-                                            <label htmlFor="equipmentDescription" className="font-medium">Equipment Description:</label>
-                                            <textarea name="equipmentDescription" id="equipmentDescription" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" rows={4} placeholder="Equipment Description" value={formData.equipmentDescription} onChange={handleInputChange}></textarea>
-                                        </div>
-
-                                        <div className="col-span-12">
-                                            <label htmlFor="additionalSources" className="font-medium">Additional Sources:</label>
-                                            <textarea name="additionalSources" id="additionalSources" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" rows={4} placeholder="Additional Sources" value={formData.additionalSources} onChange={handleInputChange}></textarea>
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="buildingPermit" className="font-medium">Building Permit:</label>
-                                            <input name="buildingPermit" id="buildingPermit" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Building Permit" value={formData.buildingPermit} onChange={handleInputChange}/>
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="buildability" className="font-medium">Buildability:</label>
-                                            <input name="buildability" id="buildability" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Buildability" value={formData.buildability} onChange={handleInputChange}/>
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="utilitiesOnLand" className="font-medium">Utilities on Land:</label>
-                                            <input name="utilitiesOnLand" id="utilitiesOnLand" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Utilities on Land" value={formData.utilitiesOnLand} onChange={handleInputChange}/>
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="utilitiesOnAdjacentRoad" className="font-medium">Utilities on Adjacent Road:</label>
-                                            <input name="utilitiesOnAdjacentRoad" id="utilitiesOnAdjacentRoad" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Utilities on Adjacent Road" value={formData.utilitiesOnAdjacentRoad} onChange={handleInputChange}/>
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="payments" className="font-medium">Payments:</label>
-                                            <input name="payments" id="payments" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Payments" value={formData.payments} onChange={handleInputChange}/>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Agent Information Section */}
-                                <div className="rounded-md shadow-sm shadow-gray-200 dark:shadow-gray-700 p-6 bg-white dark:bg-slate-900">
-                                    <h6 className="text-lg font-semibold mb-4 text-green-600">Agent Information</h6>
-                                    <div className="grid grid-cols-12 gap-5">
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="brokerId" className="font-medium">Broker ID:</label>
-                                            <input name="brokerId" id="brokerId" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Broker ID" value={formData.brokerId} onChange={handleInputChange}/>
-                                        </div>
-
-                                        <div className="col-span-12 md:col-span-6">
-                                            <label htmlFor="secondaryAgent" className="font-medium">Secondary Agent:</label>
-                                            <input name="secondaryAgent" id="secondaryAgent" type="text" className="form-input border !border-gray-200 dark:!border-gray-800 mt-2" placeholder="Secondary Agent" value={formData.secondaryAgent} onChange={handleInputChange}/>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="flex justify-end">
-                                    <button type="submit" className="btn bg-green-600 hover:bg-green-700 border-green-600 hover:border-green-700 text-white rounded-md">Add Property</button>
-                                </div>
-                            </form>
-                        </div>
+                        {step === 2 && (
+                            <PublishStep
+                                photos={photos}
+                                setPhotos={setPhotos}
+                                attachments={attachments}
+                                setAttachments={setAttachments}
+                                documents={documents}
+                                submitting={submitting}
+                                error={submitError}
+                                onBack={() => goToStep(1)}
+                                onSubmit={handleSubmit}
+                            />
+                        )}
                     </div>
                 </div>
             </div>
         </Wrapper>
-    )
+    );
+}
+
+function StepBar({ step, onJump }: { step: number; onJump: (i: number) => void }) {
+    return (
+        <ol className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
+            {STEPS.map((s, i) => {
+                const state = i === step ? 'current' : i < step ? 'done' : 'todo';
+                return (
+                    <li key={s.title}>
+                        <button
+                            type="button"
+                            onClick={() => i < step && onJump(i)}
+                            disabled={i > step}
+                            aria-current={state === 'current' ? 'step' : undefined}
+                            className={`w-full text-left flex items-center gap-3 p-4 rounded-md bg-white dark:bg-slate-900 shadow-sm shadow-gray-200 dark:shadow-gray-700 border-b-2 ${
+                                state === 'current' ? 'border-green-600' : state === 'done' ? 'border-green-600/40 cursor-pointer' : 'border-transparent opacity-60'
+                            }`}
+                        >
+                            <span className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
+                                state === 'todo' ? 'bg-gray-100 dark:bg-slate-800 text-slate-400' : 'bg-green-600 text-white'
+                            }`}>
+                                {state === 'done' ? <i className="mdi mdi-check"></i> : i + 1}
+                            </span>
+                            <span className="min-w-0">
+                                <span className="block font-medium truncate">{s.title}</span>
+                                <span className="block text-sm text-slate-400 truncate">{s.hint}</span>
+                            </span>
+                        </button>
+                    </li>
+                );
+            })}
+        </ol>
+    );
+}
+
+function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+    return <div className={`rounded-md shadow-sm shadow-gray-200 dark:shadow-gray-700 p-6 bg-white dark:bg-slate-900 ${className}`}>{children}</div>;
+}
+
+function IntakeStep({ documents, setDocuments, note, setNote, extracting, error, onExtract, onSkip }: {
+    documents: File[];
+    setDocuments: (files: File[]) => void;
+    note: string;
+    setNote: (note: string) => void;
+    extracting: boolean;
+    error: string | null;
+    onExtract: () => void;
+    onSkip: () => void;
+}) {
+    return (
+        <Card>
+            <h6 className="text-lg font-semibold text-green-600">Nahrajte podklady k nemovitosti</h6>
+            <p className="text-slate-400 mt-1 mb-5">
+                Znalecký posudek, výpis z katastru, PENB, půdorys, nabídkový list nebo jen fotka papíru.
+                AI z nich vyplní inzerát, vy už jen zkontrolujete.
+            </p>
+
+            <DropZone
+                accept={DOC_ACCEPT}
+                icon="mdi-file-upload-outline"
+                title="Přetáhněte sem dokumenty nebo klikněte pro výběr"
+                hint="PDF, obrázky a textové soubory, max. 10 MB na soubor. DOCX/XLSX prosím exportujte do PDF."
+                onFiles={(picked) => setDocuments([...documents, ...picked])}
+            />
+
+            <FileList files={documents} onRemove={(i) => setDocuments(documents.filter((_, idx) => idx !== i))} />
+
+            <div className="mt-5">
+                <label htmlFor="ai-note" className="font-medium">Poznámka pro AI <span className="text-slate-400 font-normal">(nepovinné)</span></label>
+                <textarea
+                    id="ai-note"
+                    rows={2}
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="Např. „Cena 6 950 000 Kč, prodej, k nastěhování od května.“"
+                    className="form-input border !border-gray-200 dark:!border-gray-800 mt-2 focus:!border-green-500"
+                />
+            </div>
+
+            {error && (
+                <p className="mt-4 p-3 rounded-md bg-red-50 dark:bg-red-900/20 text-red-600 text-sm whitespace-pre-line">{error}</p>
+            )}
+
+            <div className="flex flex-wrap items-center gap-4 mt-6">
+                <button
+                    type="button"
+                    onClick={onExtract}
+                    disabled={documents.length === 0 || extracting}
+                    className="btn bg-green-600 hover:bg-green-700 border-green-600 hover:border-green-700 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {extracting
+                        ? <><i className="mdi mdi-loading mdi-spin me-1"></i> AI čte dokumenty…</>
+                        : <><i className="mdi mdi-auto-fix me-1"></i> Vyplnit pomocí AI</>}
+                </button>
+                <button type="button" onClick={onSkip} disabled={extracting} className="text-slate-400 hover:text-green-600 underline">
+                    Přeskočit a vyplnit ručně
+                </button>
+                {extracting && <span className="text-sm text-slate-400">U delších posudků to může trvat i minutu.</span>}
+            </div>
+        </Card>
+    );
+}
+
+function ReviewStep({ form, errors, categories, aiFilled, needsCheck, aiNotes, onChange, onBack, onNext }: {
+    form: FormState;
+    errors: Record<string, string>;
+    categories: Category[];
+    aiFilled: Set<string>;
+    needsCheck: Set<string>;
+    aiNotes: string | null;
+    onChange: (name: string, value: string | boolean) => void;
+    onBack: () => void;
+    onNext: () => void;
+}) {
+    const sectionHasContent = useMemo(() => {
+        const map: Record<string, boolean> = {};
+        for (const section of SECTIONS) {
+            map[section.id] = section.fields.some(f =>
+                f.required || aiFilled.has(f.name) || (form[f.name] !== '' && form[f.name] !== false)
+            );
+        }
+        return map;
+    }, [form, aiFilled]);
+
+    const errorCount = Object.keys(errors).length;
+
+    return (
+        <div className="space-y-5">
+            {(aiFilled.size > 0 || aiNotes) && (
+                <div className="rounded-md p-5 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+                    <div className="flex items-start gap-3">
+                        <i className="mdi mdi-auto-fix text-2xl text-green-600"></i>
+                        <div className="min-w-0">
+                            <p className="font-medium">AI vyplnila {aiFilled.size} {aiFilled.size === 1 ? 'pole' : 'polí'}.</p>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                                Vyplněná pole jsou označená. Jakmile do pole sáhnete, označení zmizí.
+                            </p>
+                            {needsCheck.size > 0 && (
+                                <p className="text-sm mt-2">
+                                    <span className="text-amber-600 font-medium">Ověřte prosím: </span>
+                                    {[...needsCheck].map(name => ALL_FIELDS.find(f => f.name === name)?.label ?? name).join(', ')}
+                                </p>
+                            )}
+                            {aiNotes && <p className="text-sm mt-2 text-slate-500 dark:text-slate-400">{aiNotes}</p>}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {SECTIONS.map(section => (
+                <FieldSection
+                    key={section.id}
+                    section={section}
+                    form={form}
+                    errors={errors}
+                    categories={categories}
+                    aiFilled={aiFilled}
+                    needsCheck={needsCheck}
+                    defaultOpen={sectionHasContent[section.id]}
+                    onChange={onChange}
+                />
+            ))}
+
+            <div className="flex flex-wrap items-center justify-between gap-3 sticky bottom-0 py-4 bg-gray-50/90 dark:bg-slate-800/90 backdrop-blur">
+                <button type="button" onClick={onBack} className="btn bg-transparent hover:bg-green-600 border border-green-600 text-green-600 hover:text-white rounded-md">
+                    <i className="mdi mdi-chevron-left"></i> Zpět
+                </button>
+                <div className="flex items-center gap-4">
+                    {errorCount > 0 && (
+                        <span className="text-red-600 text-sm">
+                            {errorCount} {errorCount === 1 ? 'pole vyžaduje' : 'polí vyžaduje'} opravu
+                        </span>
+                    )}
+                    <button type="button" onClick={onNext} className="btn bg-green-600 hover:bg-green-700 border-green-600 hover:border-green-700 text-white rounded-md">
+                        Pokračovat k fotkám <i className="mdi mdi-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function FieldSection({ section, form, errors, categories, aiFilled, needsCheck, defaultOpen, onChange }: {
+    section: typeof SECTIONS[number];
+    form: FormState;
+    errors: Record<string, string>;
+    categories: Category[];
+    aiFilled: Set<string>;
+    needsCheck: Set<string>;
+    defaultOpen: boolean;
+    onChange: (name: string, value: string | boolean) => void;
+}) {
+    const filledCount = section.fields.filter(f => form[f.name] !== '' && form[f.name] !== false).length;
+    const hasError = section.fields.some(f => errors[f.name]);
+
+    return (
+        <details open={defaultOpen || hasError} className="rounded-md shadow-sm shadow-gray-200 dark:shadow-gray-700 bg-white dark:bg-slate-900">
+            <summary className="flex items-center gap-3 p-5 cursor-pointer select-none list-none">
+                <i className={`mdi ${section.icon} text-xl text-green-600`}></i>
+                <span className="font-semibold">{section.title}</span>
+                <span className="text-sm text-slate-400">{filledCount}/{section.fields.length}</span>
+                {hasError && <span className="text-sm text-red-600"><i className="mdi mdi-alert-circle"></i> chybí údaje</span>}
+                <i className="mdi mdi-chevron-down ms-auto text-slate-400"></i>
+            </summary>
+
+            <div className="grid grid-cols-12 gap-5 px-5 pb-6">
+                {section.fields.map(field => (
+                    <FieldInput
+                        key={field.name}
+                        field={field}
+                        value={form[field.name]}
+                        error={errors[field.name]}
+                        categories={categories}
+                        byAi={aiFilled.has(field.name)}
+                        verify={needsCheck.has(field.name)}
+                        onChange={onChange}
+                    />
+                ))}
+            </div>
+        </details>
+    );
+}
+
+const INPUT_CLASS = 'form-input border !border-gray-200 dark:!border-gray-800 mt-2 focus:!border-green-500';
+
+// Tailwind only picks up class names it can see literally, so span -> class is a lookup.
+const SPAN_CLASS: Record<number, string> = {
+    3: 'col-span-12 md:col-span-3',
+    4: 'col-span-12 md:col-span-4',
+    6: 'col-span-12 md:col-span-6',
+    12: 'col-span-12'
+};
+
+function FieldInput({ field, value, error, categories, byAi, verify, onChange }: {
+    field: Field;
+    value: string | boolean;
+    error?: string;
+    categories: Category[];
+    byAi: boolean;
+    verify: boolean;
+    onChange: (name: string, value: string | boolean) => void;
+}) {
+    const spanClass = SPAN_CLASS[field.span ?? 6] ?? SPAN_CLASS[6];
+    const options = field.name === 'categoryId'
+        ? categories.map(c => ({ value: String(c.id), label: c.name }))
+        : field.options ?? [];
+
+    if (field.kind === 'checkbox') {
+        return (
+            <div className={`${spanClass} flex items-center gap-2 md:mt-8`}>
+                <input
+                    id={field.name}
+                    type="checkbox"
+                    checked={Boolean(value)}
+                    onChange={(e) => onChange(field.name, e.target.checked)}
+                    className="w-4 h-4 accent-green-600"
+                />
+                <label htmlFor={field.name} className="font-medium">{field.label}</label>
+            </div>
+        );
+    }
+
+    return (
+        <div className={`${spanClass}`}>
+            <div className="flex items-center gap-2 flex-wrap">
+                <label htmlFor={field.name} className="font-medium">
+                    {field.label}{field.required && <span className="text-red-500"> *</span>}
+                    {field.unit && <span className="text-slate-400 font-normal"> ({field.unit})</span>}
+                </label>
+                {byAi && (
+                    <span className={`text-[11px] px-1.5 py-0.5 rounded ${
+                        verify ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+                               : 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
+                    }`}>
+                        {verify ? 'ověřit' : 'AI'}
+                    </span>
+                )}
+            </div>
+
+            {field.kind === 'select' ? (
+                <select id={field.name} name={field.name} value={String(value ?? '')} onChange={(e) => onChange(field.name, e.target.value)} className={INPUT_CLASS}>
+                    {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+            ) : field.kind === 'textarea' ? (
+                <textarea id={field.name} name={field.name} rows={6} value={String(value ?? '')} onChange={(e) => onChange(field.name, e.target.value)} className={INPUT_CLASS} />
+            ) : (
+                <input
+                    id={field.name}
+                    name={field.name}
+                    type={field.kind === 'text' ? 'text' : 'number'}
+                    step={field.kind === 'int' ? '1' : 'any'}
+                    value={String(value ?? '')}
+                    onChange={(e) => onChange(field.name, e.target.value)}
+                    className={INPUT_CLASS}
+                />
+            )}
+
+            {error
+                ? <p className="text-red-600 text-sm mt-1">{error}</p>
+                : field.hint && <p className="text-slate-400 text-sm mt-1">{field.hint}</p>}
+        </div>
+    );
+}
+
+function PublishStep({ photos, setPhotos, attachments, setAttachments, documents, submitting, error, onBack, onSubmit }: {
+    photos: File[];
+    setPhotos: (files: File[]) => void;
+    attachments: File[];
+    setAttachments: (files: File[]) => void;
+    documents: File[];
+    submitting: boolean;
+    error: string | null;
+    onBack: () => void;
+    onSubmit: () => void;
+}) {
+    const alreadyAttached = (file: File) => attachments.some(a => a.name === file.name && a.size === file.size);
+    const [preparing, setPreparing] = useState(0);
+
+    // Downscale before the files ever reach the form, so what is previewed is what
+    // gets uploaded and the 10 MB server limit is never hit.
+    const addPhotos = async (picked: File[]) => {
+        setPreparing(picked.length);
+        const prepared: File[] = [];
+        for (const file of picked) {
+            prepared.push(await downscaleImage(file));
+            setPreparing(n => n - 1);
+        }
+        setPhotos([...photos, ...prepared]);
+        setPreparing(0);
+    };
+
+    return (
+        <div className="space-y-5">
+            <Card>
+                <h6 className="text-lg font-semibold text-green-600">Fotografie</h6>
+                <p className="text-slate-400 mt-1 mb-5">
+                    První fotka je hlavní. Pořadí změníte přetažením dlaždic, hvězdičkou posunete fotku na první místo.
+                </p>
+                <DropZone
+                    accept="image/*"
+                    icon="mdi-image-multiple-outline"
+                    title="Přetáhněte sem fotky nebo klikněte pro výběr"
+                    hint="JPG a PNG. Velké fotky se automaticky zmenší, nemusíte je upravovat."
+                    onFiles={addPhotos}
+                />
+                {preparing > 0 && (
+                    <p className="mt-3 text-sm text-slate-400">
+                        <i className="mdi mdi-loading mdi-spin me-1"></i>
+                        Připravuji fotky k nahrání… zbývá {preparing}
+                    </p>
+                )}
+                <PhotoGrid photos={photos} onChange={setPhotos} />
+            </Card>
+
+            <Card>
+                <h6 className="text-lg font-semibold text-green-600">Přílohy k inzerátu</h6>
+                <p className="text-slate-400 mt-1 mb-5">Dokumenty ke stažení u inzerátu, např. půdorys nebo PENB.</p>
+
+                {documents.some(d => isAttachable(d) && !alreadyAttached(d)) && (
+                    <div className="mb-4 flex flex-wrap gap-2">
+                        {documents.filter(d => isAttachable(d) && !alreadyAttached(d)).map((doc, i) => (
+                            <button
+                                key={`${doc.name}-${i}`}
+                                type="button"
+                                onClick={() => setAttachments([...attachments, doc])}
+                                className="text-sm px-3 py-1.5 rounded-full border border-green-600 text-green-600 hover:bg-green-600 hover:text-white transition-colors"
+                            >
+                                <i className="mdi mdi-plus"></i> {doc.name}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                <DropZone
+                    accept={ATTACHMENT_ACCEPT}
+                    icon="mdi-paperclip"
+                    title="Přetáhněte sem přílohy nebo klikněte pro výběr"
+                    hint="PDF, DOC, DOCX, XLS, XLSX, max. 10 MB na soubor"
+                    onFiles={(picked) => setAttachments([...attachments, ...picked])}
+                />
+                <FileList files={attachments} onRemove={(i) => setAttachments(attachments.filter((_, idx) => idx !== i))} />
+            </Card>
+
+            {error && (
+                <p className="p-4 rounded-md bg-red-50 dark:bg-red-900/20 text-red-600 text-sm whitespace-pre-line">{error}</p>
+            )}
+
+            <div className="flex flex-wrap items-center justify-between gap-3 sticky bottom-0 py-4 bg-gray-50/90 dark:bg-slate-800/90 backdrop-blur">
+                <button type="button" onClick={onBack} disabled={submitting} className="btn bg-transparent hover:bg-green-600 border border-green-600 text-green-600 hover:text-white rounded-md">
+                    <i className="mdi mdi-chevron-left"></i> Zpět na údaje
+                </button>
+                <button type="button" onClick={onSubmit} disabled={submitting} className="btn bg-green-600 hover:bg-green-700 border-green-600 hover:border-green-700 text-white rounded-md disabled:opacity-50">
+                    {submitting
+                        ? <><i className="mdi mdi-loading mdi-spin me-1"></i> Ukládám a nahrávám fotky…</>
+                        : <><i className="mdi mdi-check me-1"></i> Publikovat nemovitost</>}
+                </button>
+            </div>
+        </div>
+    );
 }
