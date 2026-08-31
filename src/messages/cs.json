@@ -145,7 +145,8 @@
         "additionalSources": "Další zdroje",
         "attachedDocuments": "Přiložené dokumenty",
         "virtualTour": "Virtuální prohlídka",
-        "videoTour": "Video"
+        "videoTour": "Video",
+        "priceHidden": "Cena skryta"
       },
       "actions": {
         "bookNow": "Rezervovat",
@@ -184,6 +185,7 @@
     "comingSoon": "Již brzy",
     "maintenance": "Údržba",
     "error": "Chyba",
-    "thankYou": "Děkujeme"
+    "thankYou": "Děkujeme",
+    "languages": "Jazyky"
   }
-} 
+}

@@ -140,7 +140,8 @@
         "virtualTour": "Virtual Tour",
         "attachedDocuments": "Attached Documents",
         "listedOn": "Listed On",
-        "floorplans": "Floor Plans"
+        "floorplans": "Floor Plans",
+        "priceHidden": "Price hidden"
       },
       "actions": {
         "bookNow": "Book Now",
@@ -182,4 +183,4 @@
     "thankYou": "Thank You",
     "languages": "Languages"
   }
-} 
+}

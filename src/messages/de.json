@@ -139,14 +139,20 @@
         "reviewCount": "Bewertungen",
         "listedOn": "Eingestellt am",
         "buildingStoriesNumber": "Anzahl der Geschosse",
-        "floorplans": "Grundrisse"
+        "floorplans": "Grundrisse",
+        "additionalSources": "Weitere Quellen",
+        "attachedDocuments": "Beigefügte Dokumente",
+        "equipmentDescription": "Ausstattungsbeschreibung",
+        "virtualTour": "Virtueller Rundgang",
+        "priceHidden": "Preis ausgeblendet"
       },
       "actions": {
         "bookNow": "Jetzt buchen",
         "offerNow": "Jetzt anbieten",
         "contactUs": "Kontaktieren Sie uns",
         "haveQuestion": "Haben Sie Fragen? Kontaktieren Sie uns!"
-      }
+      },
+      "videoTour": "Video"
     }
   },
   "Sidebar": {
@@ -180,6 +186,7 @@
     "error": "Fehler",
     "properties": "Immobilien",
     "propertyDetail": "Immobilien-Details",
-    "thankYou": "Danke"
+    "thankYou": "Danke",
+    "languages": "Sprachen"
   }
-} 
+}

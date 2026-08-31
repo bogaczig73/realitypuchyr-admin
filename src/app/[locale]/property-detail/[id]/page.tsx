@@ -880,7 +880,7 @@ export default function PropertyDetail() {
                                     <div className="flex justify-between items-center mt-4">
                                         <span className="text-xl font-medium">
                                             {currentProperty.priceHidden ? (
-                                                <span className="italic text-gray-400">{t('fields.priceHidden') || 'Price hidden'}</span>
+                                                <span className="italic text-gray-400">{t('fields.priceHidden')}</span>
                                             ) : (
                                                 t('fields.priceWithCurrency', { price: parseFloat(currentProperty.price.toString()).toLocaleString() })
                                             )}
