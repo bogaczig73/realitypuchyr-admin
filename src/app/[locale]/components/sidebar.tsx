@@ -25,14 +25,10 @@ export default function Sidebar(){
         <nav id="sidebar" className="sidebar-wrapper sidebar-dark">
             <div className="sidebar-content">
                 <div className="sidebar-brand">
-                    <Link href={`/${locale}`}><Image src='/images/logo-light.png' width={98} height={24} alt=""/></Link>
+                    <Link href={`/${locale}/properties`}><Image src='/images/logo-light.png' width={98} height={24} alt=""/></Link>
                 </div>
                 <SimpleBar style={{height: "calc(100% - 70px)"}}>
                     <ul className="sidebar-menu border-t border-white/10">
-                        <li className={`${manu === `/${locale}` || ""? 'active' : ''} ms-0`}>
-                            <Link href={`/${locale}`}><i className="mdi mdi-chart-bell-curve-cumulative me-2"></i>{t('dashboard')}</Link>
-                        </li>
-
                         <li className={`${manu === `/${locale}/properties` ? 'active' : ''} ms-0`}>
                             <Link href={`/${locale}/properties`}><i className="mdi mdi-home-city me-2"></i>{t('properties')}</Link>
                         </li>
