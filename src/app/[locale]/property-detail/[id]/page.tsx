@@ -881,6 +881,13 @@ export default function PropertyDetail() {
                                         <span className="text-xl font-medium">
                                             {currentProperty.priceHidden ? (
                                                 <span className="italic text-gray-400">{t('fields.priceHidden')}</span>
+                                            ) : currentProperty.discountedPrice ? (
+                                                <>
+                                                    {t('fields.discountedPriceWithCurrency', { price: parseFloat(currentProperty.discountedPrice.toString()).toLocaleString() })}
+                                                    <span className="ml-2 text-sm text-gray-400 line-through">
+                                                        {t('fields.priceWithCurrency', { price: parseFloat(currentProperty.price.toString()).toLocaleString() })}
+                                                    </span>
+                                                </>
                                             ) : (
                                                 t('fields.priceWithCurrency', { price: parseFloat(currentProperty.price.toString()).toLocaleString() })
                                             )}

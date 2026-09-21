@@ -64,6 +64,21 @@
     "sort": "Řadit podle",
     "view": "Zobrazit detaily",
     "search": "Hledat",
+    "changePrice": {
+      "button": "Změnit cenu",
+      "title": "Změna ceny",
+      "oldPrice": "Původní cena",
+      "newPrice": "Nová cena",
+      "cancel": "Zrušit",
+      "save": "Uložit",
+      "saving": "Ukládání...",
+      "errors": {
+        "required": "Zadejte novou cenu",
+        "notPositive": "Cena musí být kladné číslo",
+        "notLower": "Nová cena musí být nižší než původní cena",
+        "saveFailed": "Uložení nové ceny se nezdařilo. Zkuste to prosím znovu."
+      }
+    },
     "details": {
       "title": "Detaily nemovitosti",
       "description": "Popis",
@@ -77,6 +92,7 @@
       "attachedDocuments": "Přiložené dokumenty",
       "virtualTour": "Virtuální prohlídka",
       "videoTour": "Video",
+      "video": "Video",
       "noDescription": "Popis není k dispozici",
       "noDocuments": "Žádné dokumenty nejsou přiloženy",
       "noDocumentsAttached": "Žádné dokumenty nejsou připojeny",
@@ -146,6 +162,7 @@
         "attachedDocuments": "Přiložené dokumenty",
         "virtualTour": "Virtuální prohlídka",
         "videoTour": "Video",
+        "video": "Video",
         "priceHidden": "Cena skryta"
       },
       "actions": {
