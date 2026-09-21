@@ -10,6 +10,7 @@ assert.equal(toNumber(null), 0, 'null coerces to 0');
 assert.equal(toNumber(undefined), 0, 'undefined coerces to 0');
 assert.equal(toNumber(''), 0, 'empty string coerces to 0');
 assert.equal(toNumber('0'), 0, 'string zero coerces to 0');
+assert.equal(toNumber('abc'), 0, 'non-numeric string coerces to 0');
 
 // hasDiscount: a stored 0 (string or number) is not an active discount.
 assert.equal(hasDiscount('0'), false, 'string zero is not a discount');
@@ -27,6 +28,7 @@ assert.equal(getCurrentPrice('1000000', '0'), 1000000, 'a stored 0 discount fall
 
 // validateNewPrice: required
 assert.equal(validateNewPrice(1000000, null), 'required', 'missing new price is required');
+assert.equal(validateNewPrice(1000000, NaN), 'required', 'a NaN new price is required, not silently treated as invalid-positive');
 
 // validateNewPrice: positive numbers only
 assert.equal(validateNewPrice(0, 500), 'notPositive', 'old price must be positive');
