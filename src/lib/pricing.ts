@@ -32,12 +32,13 @@ export function getCurrentPrice(price: PriceInput, discountedPrice: PriceInput):
 export type PriceValidationError = 'required' | 'notPositive' | 'notLower';
 
 /**
- * Validates a new price against the *current* price for the change-price
- * modal (the asking price if there is no discount yet, the active discount
- * if there is). Both must be positive; the new price must be lower than the
- * current price (discountedPrice is a discount, never a markup) - comparing
- * against the original asking price on an already-discounted property would
- * let a price rise past the current discount while still reading as "lower".
+ * Validates a new price against the *current* price (getCurrentPrice) for
+ * the change-price modal - the actual number a buyer pays today, always
+ * read from the property and never something the user can edit or inflate.
+ * "Change price" only ever lowers what a buyer pays, so the new price must
+ * be positive and strictly lower than the current price: a value between an
+ * active discount and the original asking price is still a markup and is
+ * rejected, exactly like a value at or above an undiscounted asking price.
  */
 export function validateNewPrice(currentPrice: number, newPrice: number | null): PriceValidationError | null {
     if (newPrice === null || Number.isNaN(newPrice)) return 'required';
@@ -47,22 +48,22 @@ export function validateNewPrice(currentPrice: number, newPrice: number | null):
 }
 
 /**
- * What a "change price" save writes. Once a discount is already active, the
- * modal's current-price field is a read-only reference (edits to it are not
- * sent - allowing that would let the "must be lower" check be gamed by
- * inflating the reference), so only discountedPrice moves and the original
- * asking price is left exactly alone. Before any discount exists there's no
- * distinction yet - the current-price field *is* the asking price - so it is
- * still editable and is written as `price` alongside the new discount.
+ * What a "change price" save writes. "Change price" is a discount action
+ * only - the modal never lets a user edit the asking price, so `price` is
+ * never taken from user input. The first discount on a listing writes
+ * `price` once, from the property's own asking price, alongside the new
+ * discountedPrice. Every discount after that only moves discountedPrice;
+ * `price` is never sent again, so a caller can't accidentally collapse the
+ * original asking price into today's price.
  */
 export function buildPriceChangePayload(
     discountAlreadyActive: boolean,
-    currentPrice: number,
+    askingPrice: number,
     newPrice: number
 ): { price: number; discountedPrice: number } | { discountedPrice: number } {
     return discountAlreadyActive
         ? { discountedPrice: newPrice }
-        : { price: currentPrice, discountedPrice: newPrice };
+        : { price: askingPrice, discountedPrice: newPrice };
 }
 
 /** Clearing a discount nulls discountedPrice and never touches price. */

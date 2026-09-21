@@ -25,9 +25,8 @@ export default function ChangePriceModal({ property, locale, onSaved, onCancel }
 
     const askingPrice = toNumber(property.price)
     const discountAlreadyActive = hasDiscount(property.discountedPrice)
-    const startingCurrentPrice = getCurrentPrice(property.price, property.discountedPrice)
+    const currentPrice = getCurrentPrice(property.price, property.discountedPrice)
 
-    const [currentPrice, setCurrentPrice] = useState(String(startingCurrentPrice))
     const [newPrice, setNewPrice] = useState('')
     const [error, setError] = useState<string | null>(null)
     const [busyAction, setBusyAction] = useState<'save' | 'clear' | null>(null)
@@ -44,17 +43,8 @@ export default function ChangePriceModal({ property, locale, onSaved, onCancel }
         e.preventDefault()
         setError(null)
 
-        // Once a discount is active the input is disabled and its value is never
-        // written, so validate against the STORED current price rather than what
-        // is in the field. `disabled` is only a DOM attribute — clearing it in
-        // devtools lets onChange fire, and React will not re-assert it without a
-        // prop change, so reading the field back here would let the "must be
-        // lower" rule be defeated by inflating the reference it compares against.
-        const currentValue = discountAlreadyActive
-            ? startingCurrentPrice
-            : parseFloat(currentPrice)
         const newValue = newPrice === '' ? null : parseFloat(newPrice)
-        const validationError = validateNewPrice(currentValue, newValue)
+        const validationError = validateNewPrice(currentPrice, newValue)
 
         if (validationError || newValue === null) {
             setError(validationMessages[validationError ?? 'required'])
@@ -63,7 +53,7 @@ export default function ChangePriceModal({ property, locale, onSaved, onCancel }
 
         setBusyAction('save')
         try {
-            const payload = buildPriceChangePayload(discountAlreadyActive, currentValue, newValue)
+            const payload = buildPriceChangePayload(discountAlreadyActive, askingPrice, newValue)
             const updated = await propertyService.updateProperty(property.id, payload, locale)
             onSaved(updated)
         } catch (err) {
@@ -112,22 +102,8 @@ export default function ChangePriceModal({ property, locale, onSaved, onCancel }
                         </div>
                     )}
 
-                    <div>
-                        <label htmlFor="currentPrice" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {t('oldPrice')}
-                        </label>
-                        <input
-                            type="number"
-                            id="currentPrice"
-                            name="currentPrice"
-                            min="0"
-                            step="0.01"
-                            value={currentPrice}
-                            onChange={(e) => setCurrentPrice(e.target.value)}
-                            disabled={discountAlreadyActive}
-                            required
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-slate-800 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed"
-                        />
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                        {t('currentPrice')}: <span className="font-medium">{currentPrice.toLocaleString()} Kč</span>
                     </div>
 
                     <div>

@@ -67,7 +67,7 @@
     "changePrice": {
       "button": "Change price",
       "title": "Change price",
-      "oldPrice": "Current price",
+      "currentPrice": "Current price",
       "newPrice": "New price",
       "askingPrice": "Original asking price",
       "clearDiscount": "Clear discount",

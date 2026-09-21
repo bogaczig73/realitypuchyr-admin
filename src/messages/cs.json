@@ -67,7 +67,7 @@
     "changePrice": {
       "button": "Změnit cenu",
       "title": "Změna ceny",
-      "oldPrice": "Aktuální cena",
+      "currentPrice": "Aktuální cena",
       "newPrice": "Nová cena",
       "askingPrice": "Původní cena",
       "clearDiscount": "Zrušit slevu",

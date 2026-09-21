@@ -55,8 +55,20 @@ assert.equal(validateNewPrice(1000000, 900000), null, 'a lower price is valid');
     assert.equal(validateNewPrice(current, 4200000), null, 'a price below the active discount is a valid further discount');
 }
 
-// buildPriceChangePayload: before any discount exists, the current-price field
-// *is* the asking price, so it is still writable alongside the new discount.
+// Same bug, mirrored on an undiscounted listing (current price == asking
+// price): "change price" only ever lowers what a buyer pays, so a new price
+// above the asking price must be rejected here too, not just once a discount
+// already exists. This is the case the read-only current-price field closes -
+// there is no field left for a user to inflate to make a markup look valid.
+{
+    const current = getCurrentPrice(5000000, null);
+    assert.equal(current, 5000000, 'sanity: current price is the asking price when there is no discount yet');
+    assert.equal(validateNewPrice(current, 5500000), 'notLower', 'a price above the asking price is rejected on an undiscounted listing too');
+    assert.equal(validateNewPrice(current, 4500000), null, 'a price below the asking price is a valid first discount');
+}
+
+// buildPriceChangePayload: the first discount writes `price` once, from the
+// property's own asking price - never from anything a user can edit.
 assert.deepEqual(
     buildPriceChangePayload(false, 5000000, 4500000),
     { price: 5000000, discountedPrice: 4500000 },
