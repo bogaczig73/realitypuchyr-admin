@@ -64,6 +64,21 @@
     "sort": "Sort By",
     "view": "View Details",
     "search": "Search",
+    "changePrice": {
+      "button": "Change price",
+      "title": "Change price",
+      "oldPrice": "Old price",
+      "newPrice": "New price",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving...",
+      "errors": {
+        "required": "Enter a new price",
+        "notPositive": "Price must be a positive number",
+        "notLower": "The new price must be lower than the old price",
+        "saveFailed": "Failed to save the new price. Please try again."
+      }
+    },
     "details": {
       "title": "Property Details",
       "description": "Description",

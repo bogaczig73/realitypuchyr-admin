@@ -3,11 +3,13 @@ import React, { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Wrapper from "@/app/[locale]/components/wrapper";
+import ChangePriceModal from "@/app/[locale]/components/changePriceModal";
 import { Property, Pagination, PropertyStatus } from "@/types/property";
 import { propertyService } from "@/api/services/property";
 import { useSearchParams, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { ApiError } from "@/api/errors";
+import { getCurrentPrice, hasDiscount, toNumber } from "@/lib/pricing";
 
 export default function ExploreProperty() {
     return (
@@ -36,8 +38,10 @@ function ExplorePropertyContent() {
     const [statusFilter, setStatusFilter] = useState<PropertyStatus | "">("");
     const [imageLoading, setImageLoading] = useState<{ [key: number]: boolean }>({});
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+    const [priceModalProperty, setPriceModalProperty] = useState<Property | null>(null);
 
     const params = useParams();
+    const locale = String(params.locale);
     const searchParams = useSearchParams();
     const t = useTranslations('properties');
     const page = Number(searchParams.get('page')) || 1;
@@ -76,6 +80,11 @@ function ExplorePropertyContent() {
 
     const handleImageLoad = (id: number) => {
         setImageLoading(prev => ({ ...prev, [id]: false }));
+    };
+
+    const handlePriceSaved = (updated: Property) => {
+        setProperties(prev => prev.map(p => p.id === updated.id ? updated : p));
+        setPriceModalProperty(null);
     };
 
     // Filter properties based on current filters
@@ -288,8 +297,13 @@ function ExplorePropertyContent() {
                                                     <li>
                                                         <span className="text-slate-400">Price</span>
                                                         <p className="text-lg font-medium">
-                                                            {parseFloat(String(item.price || '0')).toLocaleString()} Kč
+                                                            {getCurrentPrice(item.price, item.discountedPrice).toLocaleString()} Kč
                                                         </p>
+                                                        {hasDiscount(item.discountedPrice) && (
+                                                            <p className="text-sm text-gray-500 line-through">
+                                                                {toNumber(item.price).toLocaleString()} Kč
+                                                            </p>
+                                                        )}
                                                     </li>
 
                                                     <li>
@@ -385,11 +399,11 @@ function ExplorePropertyContent() {
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap">
                                                                 <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                                                    {parseFloat(String(item.price || '0')).toLocaleString()} Kč
+                                                                    {getCurrentPrice(item.price, item.discountedPrice).toLocaleString()} Kč
                                                                 </div>
-                                                                {item.discountedPrice && (
+                                                                {hasDiscount(item.discountedPrice) && (
                                                                     <div className="text-sm text-gray-500 line-through">
-                                                                        {parseFloat(String(item.price || '0')).toLocaleString()} Kč
+                                                                        {toNumber(item.price).toLocaleString()} Kč
                                                                     </div>
                                                                 )}
                                                             </td>
@@ -405,12 +419,19 @@ function ExplorePropertyContent() {
                                                                 >
                                                                     View
                                                                 </Link>
-                                                                <Link 
+                                                                <Link
                                                                     href={`/${params.locale}/property-detail/${item.id}/edit`}
-                                                                    className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                                                                    className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-3"
                                                                 >
                                                                     Edit
                                                                 </Link>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setPriceModalProperty(item)}
+                                                                    className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
+                                                                >
+                                                                    {t('changePrice.button')}
+                                                                </button>
                                                             </td>
                                                         </tr>
                                                     ))}
@@ -486,6 +507,15 @@ function ExplorePropertyContent() {
                     )}
                 </div>
             </div>
+
+            {priceModalProperty && (
+                <ChangePriceModal
+                    property={priceModalProperty}
+                    locale={locale}
+                    onSaved={handlePriceSaved}
+                    onCancel={() => setPriceModalProperty(null)}
+                />
+            )}
         </Wrapper>
     );
 } 

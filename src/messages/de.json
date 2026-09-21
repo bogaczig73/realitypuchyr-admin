@@ -64,6 +64,21 @@
     "sort": "Sortieren nach",
     "view": "Details anzeigen",
     "search": "Suchen",
+    "changePrice": {
+      "button": "Preis ändern",
+      "title": "Preis ändern",
+      "oldPrice": "Alter Preis",
+      "newPrice": "Neuer Preis",
+      "cancel": "Abbrechen",
+      "save": "Speichern",
+      "saving": "Wird gespeichert...",
+      "errors": {
+        "required": "Bitte geben Sie einen neuen Preis ein",
+        "notPositive": "Der Preis muss eine positive Zahl sein",
+        "notLower": "Der neue Preis muss niedriger sein als der alte Preis",
+        "saveFailed": "Der neue Preis konnte nicht gespeichert werden. Bitte versuchen Sie es erneut."
+      }
+    },
     "details": {
       "title": "Immobiliendetails",
       "description": "Beschreibung",
