@@ -9,7 +9,7 @@ import { propertyService } from "@/api/services/property";
 import { useSearchParams, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { ApiError } from "@/api/errors";
-import { getCurrentPrice } from "@/lib/pricing";
+import { getCurrentPrice, hasDiscount, toNumber } from "@/lib/pricing";
 
 export default function ExploreProperty() {
     return (
@@ -299,9 +299,9 @@ function ExplorePropertyContent() {
                                                         <p className="text-lg font-medium">
                                                             {getCurrentPrice(item.price, item.discountedPrice).toLocaleString()} Kč
                                                         </p>
-                                                        {item.discountedPrice && (
+                                                        {hasDiscount(item.discountedPrice) && (
                                                             <p className="text-sm text-gray-500 line-through">
-                                                                {item.price.toLocaleString()} Kč
+                                                                {toNumber(item.price).toLocaleString()} Kč
                                                             </p>
                                                         )}
                                                     </li>
@@ -401,9 +401,9 @@ function ExplorePropertyContent() {
                                                                 <div className="text-sm font-medium text-gray-900 dark:text-white">
                                                                     {getCurrentPrice(item.price, item.discountedPrice).toLocaleString()} Kč
                                                                 </div>
-                                                                {item.discountedPrice && (
+                                                                {hasDiscount(item.discountedPrice) && (
                                                                     <div className="text-sm text-gray-500 line-through">
-                                                                        {item.price.toLocaleString()} Kč
+                                                                        {toNumber(item.price).toLocaleString()} Kč
                                                                     </div>
                                                                 )}
                                                             </td>

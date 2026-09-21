@@ -2,9 +2,8 @@
 import React, { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { propertyService } from '@/api/services/property'
-import { validateNewPrice } from '@/lib/pricing'
+import { validateNewPrice, PriceValidationError } from '@/lib/pricing'
 import { Property } from '@/types/property'
-import { ApiError } from '@/api/errors'
 
 interface ChangePriceModalProps {
     property: Property
@@ -20,6 +19,14 @@ export default function ChangePriceModal({ property, locale, onSaved, onCancel }
     const [error, setError] = useState<string | null>(null)
     const [saving, setSaving] = useState(false)
 
+    // Explicit literal t() calls so scripts/check-i18n.mjs can see every key
+    // it needs to verify — a template-literal lookup is invisible to it.
+    const validationMessages: Record<PriceValidationError, string> = {
+        required: t('errors.required'),
+        notPositive: t('errors.notPositive'),
+        notLower: t('errors.notLower')
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setError(null)
@@ -29,7 +36,7 @@ export default function ChangePriceModal({ property, locale, onSaved, onCancel }
         const validationError = validateNewPrice(oldValue, newValue)
 
         if (validationError) {
-            setError(t(`errors.${validationError}`))
+            setError(validationMessages[validationError])
             return
         }
 
@@ -41,8 +48,8 @@ export default function ChangePriceModal({ property, locale, onSaved, onCancel }
             }, locale)
             onSaved(updated)
         } catch (err) {
-            const message = err instanceof ApiError ? err.message : t('errors.saveFailed')
-            setError(message)
+            console.error('Failed to save property price:', err)
+            setError(t('errors.saveFailed'))
         } finally {
             setSaving(false)
         }

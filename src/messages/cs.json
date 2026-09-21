@@ -92,7 +92,6 @@
       "attachedDocuments": "Přiložené dokumenty",
       "virtualTour": "Virtuální prohlídka",
       "videoTour": "Video",
-      "video": "Video",
       "noDescription": "Popis není k dispozici",
       "noDocuments": "Žádné dokumenty nejsou přiloženy",
       "noDocumentsAttached": "Žádné dokumenty nejsou připojeny",
@@ -162,7 +161,6 @@
         "attachedDocuments": "Přiložené dokumenty",
         "virtualTour": "Virtuální prohlídka",
         "videoTour": "Video",
-        "video": "Video",
         "priceHidden": "Cena skryta"
       },
       "actions": {
