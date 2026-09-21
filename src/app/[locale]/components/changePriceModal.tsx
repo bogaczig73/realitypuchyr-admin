@@ -44,18 +44,26 @@ export default function ChangePriceModal({ property, locale, onSaved, onCancel }
         e.preventDefault()
         setError(null)
 
-        const currentValue = parseFloat(currentPrice)
+        // Once a discount is active the input is disabled and its value is never
+        // written, so validate against the STORED current price rather than what
+        // is in the field. `disabled` is only a DOM attribute — clearing it in
+        // devtools lets onChange fire, and React will not re-assert it without a
+        // prop change, so reading the field back here would let the "must be
+        // lower" rule be defeated by inflating the reference it compares against.
+        const currentValue = discountAlreadyActive
+            ? startingCurrentPrice
+            : parseFloat(currentPrice)
         const newValue = newPrice === '' ? null : parseFloat(newPrice)
         const validationError = validateNewPrice(currentValue, newValue)
 
-        if (validationError) {
-            setError(validationMessages[validationError])
+        if (validationError || newValue === null) {
+            setError(validationMessages[validationError ?? 'required'])
             return
         }
 
         setBusyAction('save')
         try {
-            const payload = buildPriceChangePayload(discountAlreadyActive, currentValue, newValue as number)
+            const payload = buildPriceChangePayload(discountAlreadyActive, currentValue, newValue)
             const updated = await propertyService.updateProperty(property.id, payload, locale)
             onSaved(updated)
         } catch (err) {
