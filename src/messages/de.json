@@ -67,15 +67,18 @@
     "changePrice": {
       "button": "Preis ändern",
       "title": "Preis ändern",
-      "oldPrice": "Alter Preis",
+      "currentPrice": "Aktueller Preis",
       "newPrice": "Neuer Preis",
+      "askingPrice": "Ursprünglicher Preis",
+      "clearDiscount": "Rabatt aufheben",
+      "clearing": "Rabatt wird aufgehoben...",
       "cancel": "Abbrechen",
       "save": "Speichern",
       "saving": "Wird gespeichert...",
       "errors": {
         "required": "Bitte geben Sie einen neuen Preis ein",
         "notPositive": "Der Preis muss eine positive Zahl sein",
-        "notLower": "Der neue Preis muss niedriger sein als der alte Preis",
+        "notLower": "Der neue Preis muss niedriger sein als der aktuelle Preis",
         "saveFailed": "Der neue Preis konnte nicht gespeichert werden. Bitte versuchen Sie es erneut."
       }
     },

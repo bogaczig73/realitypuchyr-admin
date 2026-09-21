@@ -32,13 +32,41 @@ export function getCurrentPrice(price: PriceInput, discountedPrice: PriceInput):
 export type PriceValidationError = 'required' | 'notPositive' | 'notLower';
 
 /**
- * Validates a new price against the old one for the change-price modal.
- * Both must be positive; the new price must be lower than the old price
- * (discountedPrice is a discount, never a markup).
+ * Validates a new price against the *current* price (getCurrentPrice) for
+ * the change-price modal - the actual number a buyer pays today, always
+ * read from the property and never something the user can edit or inflate.
+ * "Change price" only ever lowers what a buyer pays, so the new price must
+ * be positive and strictly lower than the current price: a value between an
+ * active discount and the original asking price is still a markup and is
+ * rejected, exactly like a value at or above an undiscounted asking price.
  */
-export function validateNewPrice(oldPrice: number, newPrice: number | null): PriceValidationError | null {
+export function validateNewPrice(currentPrice: number, newPrice: number | null): PriceValidationError | null {
     if (newPrice === null || Number.isNaN(newPrice)) return 'required';
-    if (!(oldPrice > 0) || !(newPrice > 0)) return 'notPositive';
-    if (!(newPrice < oldPrice)) return 'notLower';
+    if (!(currentPrice > 0) || !(newPrice > 0)) return 'notPositive';
+    if (!(newPrice < currentPrice)) return 'notLower';
     return null;
+}
+
+/**
+ * What a "change price" save writes. "Change price" is a discount action
+ * only - the modal never lets a user edit the asking price, so `price` is
+ * never taken from user input. The first discount on a listing writes
+ * `price` once, from the property's own asking price, alongside the new
+ * discountedPrice. Every discount after that only moves discountedPrice;
+ * `price` is never sent again, so a caller can't accidentally collapse the
+ * original asking price into today's price.
+ */
+export function buildPriceChangePayload(
+    discountAlreadyActive: boolean,
+    askingPrice: number,
+    newPrice: number
+): { price: number; discountedPrice: number } | { discountedPrice: number } {
+    return discountAlreadyActive
+        ? { discountedPrice: newPrice }
+        : { price: askingPrice, discountedPrice: newPrice };
+}
+
+/** Clearing a discount nulls discountedPrice and never touches price. */
+export function buildClearDiscountPayload(): { discountedPrice: null } {
+    return { discountedPrice: null };
 }

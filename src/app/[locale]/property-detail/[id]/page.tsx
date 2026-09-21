@@ -10,6 +10,7 @@ import { useTranslations } from 'next-intl';
 import { ApiError } from "@/api/errors";
 import { FiEdit, FiTrash2, FiGlobe, FiEye, FiX } from "react-icons/fi";
 import { SUPPORTED_LANGUAGES } from '../../components/supportedLanguages';
+import { hasDiscount, getCurrentPrice, toNumber } from '@/lib/pricing';
 
 export default function PropertyDetail() {
     const params = useParams();
@@ -471,7 +472,7 @@ export default function PropertyDetail() {
                                                 <span className="font-medium">{t('fields.price')}:</span>
                                                 <span className="text-right">{formatValue(property.price)} Kč</span>
                                             </li>
-                                            {property.discountedPrice && (
+                                            {hasDiscount(property.discountedPrice) && (
                                                 <li key="discountedPrice" className="flex justify-between items-center">
                                                     <span className="font-medium">{t('fields.discountedPrice')}:</span>
                                                     <span className="text-right">{formatValue(property.discountedPrice)} Kč</span>
@@ -881,15 +882,15 @@ export default function PropertyDetail() {
                                         <span className="text-xl font-medium">
                                             {currentProperty.priceHidden ? (
                                                 <span className="italic text-gray-400">{t('fields.priceHidden')}</span>
-                                            ) : currentProperty.discountedPrice ? (
+                                            ) : hasDiscount(currentProperty.discountedPrice) ? (
                                                 <>
-                                                    {t('fields.discountedPriceWithCurrency', { price: parseFloat(currentProperty.discountedPrice.toString()).toLocaleString() })}
+                                                    {t('fields.discountedPriceWithCurrency', { price: getCurrentPrice(currentProperty.price, currentProperty.discountedPrice).toLocaleString() })}
                                                     <span className="ml-2 text-sm text-gray-400 line-through">
-                                                        {t('fields.priceWithCurrency', { price: parseFloat(currentProperty.price.toString()).toLocaleString() })}
+                                                        {t('fields.priceWithCurrency', { price: toNumber(currentProperty.price).toLocaleString() })}
                                                     </span>
                                                 </>
                                             ) : (
-                                                t('fields.priceWithCurrency', { price: parseFloat(currentProperty.price.toString()).toLocaleString() })
+                                                t('fields.priceWithCurrency', { price: toNumber(currentProperty.price).toLocaleString() })
                                             )}
                                         </span>
 
