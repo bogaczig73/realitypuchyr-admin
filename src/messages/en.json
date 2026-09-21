@@ -67,15 +67,18 @@
     "changePrice": {
       "button": "Change price",
       "title": "Change price",
-      "oldPrice": "Old price",
+      "oldPrice": "Current price",
       "newPrice": "New price",
+      "askingPrice": "Original asking price",
+      "clearDiscount": "Clear discount",
+      "clearing": "Clearing...",
       "cancel": "Cancel",
       "save": "Save",
       "saving": "Saving...",
       "errors": {
         "required": "Enter a new price",
         "notPositive": "Price must be a positive number",
-        "notLower": "The new price must be lower than the old price",
+        "notLower": "The new price must be lower than the current price",
         "saveFailed": "Failed to save the new price. Please try again."
       }
     },

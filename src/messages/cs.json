@@ -67,15 +67,18 @@
     "changePrice": {
       "button": "Změnit cenu",
       "title": "Změna ceny",
-      "oldPrice": "Původní cena",
+      "oldPrice": "Aktuální cena",
       "newPrice": "Nová cena",
+      "askingPrice": "Původní cena",
+      "clearDiscount": "Zrušit slevu",
+      "clearing": "Ruším slevu...",
       "cancel": "Zrušit",
       "save": "Uložit",
       "saving": "Ukládání...",
       "errors": {
         "required": "Zadejte novou cenu",
         "notPositive": "Cena musí být kladné číslo",
-        "notLower": "Nová cena musí být nižší než původní cena",
+        "notLower": "Nová cena musí být nižší než aktuální cena",
         "saveFailed": "Uložení nové ceny se nezdařilo. Zkuste to prosím znovu."
       }
     },
